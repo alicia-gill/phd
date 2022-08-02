@@ -1,4 +1,4 @@
-phylo_tree <- function(epidemic,stop_time) {
+phylo_tree <- function(epidemic, stop_time) {
   n_total <- nrow(epidemic)
 
   #sets recovery time as stop time (t_stop) for those still infectious at the end
