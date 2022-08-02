@@ -47,12 +47,12 @@ epidemic <- function(birth_rate,death_rate,stop_time) {
       data$index[n_total] <- n_total
       data$parent[n_total] <- i
       data$status[n_total] <- "I"
-      data$inf.time[n_total] <- current_time
-      data$recov.time[n_total] <- NA
+      data$inf_time[n_total] <- current_time
+      data$rem_time[n_total] <- NA
     } else {
       #recovery event
       data$status[i] <- "R"
-      data$recov.time[i] <- current_time
+      data$rem_time[i] <- current_time
       n_inf <- n_inf - 1
       inf <- inf[!inf==i] #remove i from inf
     }
