@@ -15,4 +15,5 @@ BugReports: https://github.com/alicia-gill/phd/issues
 Imports: 
     ape,
     extraDistr,
-    matrixStats
+    matrixStats,
+    parallel
