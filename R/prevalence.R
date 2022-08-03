@@ -5,7 +5,7 @@ prevalence <- function(epidemic, stop_time) {
   for (i in 1:l) {
     ti <- t[i]
     inf <- sum(epidemic$inf_time <= ti)
-    rem <- sum(epi$rem_time <= ti, na.rm = T)
+    rem <- sum(epidemic$rem_time <= ti, na.rm = T)
     prev$prev[i] <- inf - rem
   }
   prev <- as.data.frame(prev)
