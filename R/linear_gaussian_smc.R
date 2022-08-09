@@ -60,12 +60,13 @@ smc <- function(n_particles, y) {
   return(int_llik)
 }
 
-lines(1:t, apply(X_resample,2,mean),type="o",pch=20,col="green")
+#lines(1:t, apply(x_resample,2,mean),type="o",pch=20,col="green")
 
 #find smc package and compare likelihoods
 #implement into mh
 #infer one parameter (FF,GG=1, infer variance of unobserved process)
 
+library(nimble)
 code <- nimble::nimbleCode({
   x0 ~ dnorm(0, var = 1)
   x[1] ~ dnorm(x0, var = 1)
@@ -77,7 +78,10 @@ code <- nimble::nimbleCode({
 })
 model <- nimble::nimbleModel(code=code, data=list(y=y), inits=list(x0=x0, x=x))
 
+library(nimbleSMC)
 BF <- nimbleSMC::buildBootstrapFilter(model=model, nodes="x", control=list(thresh=1, saveAll=TRUE, smoothing=FALSE))
+
+N <- 100
 BF$run(N)
 smc(N,y=y)
 
@@ -93,3 +97,4 @@ smc_mean <- smc_mean/10
 time <- Sys.time() - time
 c(bf_mean, smc_mean, time)
 
+##meaningless changes to check commits
