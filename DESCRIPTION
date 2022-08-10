@@ -14,7 +14,9 @@ URL: https://github.com/alicia-gill/phd
 BugReports: https://github.com/alicia-gill/phd/issues
 Imports: 
     ape,
+    dplyr,
     extraDistr,
+    invgamma,
     matrixStats,
     nimble,
     nimbleSMC,
