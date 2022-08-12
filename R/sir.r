@@ -1,13 +1,14 @@
-sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_prevalence, ptree) {
+sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_prevalence, genetic_data, plot=F) {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1
-  genetic_data <- genetic_data(ptree = ptree, stop_time = N)
   samples <- matrix(nrow = N + 1, ncol = n_particles)
   #first day always has 1
-  samples[,1] <- 1
+  samples[1, ] <- 1
 
   #initialise smc likelihood approximation
   int_llik <- 0
+
+  # bias <- matrix(nrow=N, ncol=3)
 
   #Day 1
   #sample from a truncated poisson
@@ -29,6 +30,11 @@ sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_preva
   } else {
     x_resample <- x_sample
   }
+  samples[2, ] <- x_resample
+
+  # bias[1,1] <- mean(x_sample)
+  # bias[1,2] <- mean(x_resample)
+  # bias[1,3] <- bias[1,1] - bias[1,2]
 
   #Day 2:N
   for (i in 2:N) {
@@ -49,6 +55,16 @@ sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_preva
     } else {
       x_resample <- x_sample
     }
+    samples[i + 1, ] <- x_resample
+    # bias[i, 1] <- mean(x_sample)
+    # bias[i, 2] <- mean(x_resample)
+    # bias[i, 3] <- bias[i, 1] - bias[i, 2]
+  }
+
+  if (plot == T) {
+    j <- sample(1:n_particles, 1, prob=norm_weights)
+    sample <- samples[,j]
+    lines(sample)
   }
 
   return(int_llik)
