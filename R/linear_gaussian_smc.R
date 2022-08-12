@@ -1,9 +1,9 @@
 t <- 10
 
 VV <- 0.5
-vv <- rnorm(t, 0, V)
+vv <- rnorm(t, 0, VV)
 WW <- 1
-ww <- rnorm(t, 0, W)
+ww <- rnorm(t, 0, WW)
 
 #FF <- 0.95
 #GG <- 1
