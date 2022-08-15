@@ -1,5 +1,18 @@
 #starts with 1 infected person
 #takes constant birth and death rates
+#' Simulate epidemics
+#'
+#' Simulates a birth-death epidemic with 1 infected on day 0.
+#'
+#' @param birth_rate The birth rate of the epidemic.
+#' @param death_rate The death rate of the epidemic.
+#' @param stop_time The number of days to run the epidemic simulation for.
+#'
+#' @return A data frame with: Index, Parent Index, Infection Status, Infection Time, Removal Time
+#' @export
+#'
+#' @examples
+#' epidemic(birth_rate = 0.2, death_rate = 0.1, stop_time = 50)
 epidemic <- function(birth_rate,death_rate,stop_time) {
   #index labels everyone by order of entry
   #parent is the number of parent
