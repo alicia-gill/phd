@@ -12,6 +12,8 @@ sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_preva
 
   # bias <- matrix(nrow=N, ncol=3)
 
+  log_n_particles <- log(n_particles)
+
   for (i in 1:N) {
     #sample from poisson centred at noisy_prev/prop_obs, or 1 if noisy_prev is 0
     lambda <- max(1, noisy_prevalence[i + 1, 2] / proportion_obs)
