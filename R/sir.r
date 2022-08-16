@@ -12,19 +12,25 @@ sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_preva
 
   #Day 1
   #sample from a truncated poisson
-  x_sample <- extraDistr::rtpois(n_particles, 1 + noisy_prevalence[2, 2] / proportion_obs, a = 0)
+  lambda <- max(1, noisy_prevalence[2,2] / proportion_obs)
+  a <- max(0, noisy_prevalence[2, 2] - 1)
+  x_sample <- extraDistr::rtpois(n_particles, lambda = lambda, a = a)
   log_weights <- extraDistr::dskellam(x_sample - 1, birth_rate, death_rate, log = T) +
                  dbinom(genetic_data[2, 3], choose(genetic_data[2, 2], 2), 2 * birth_rate / x_sample, log = T) +
                  dbinom(noisy_prevalence[2, 2], x_sample, proportion_obs, log = T) -
-                 extraDistr::dtpois(x_sample, 1 + noisy_prevalence[2, 2] / proportion_obs, a = 0, log = T)
+                 extraDistr::dtpois(x_sample, lambda = lambda, a = a, log = T)
+
+  #if all impossible, then mission abort
+  if (max(log_weights) == -Inf) {
+    int_llik <- -Inf
+    break
+  }
+
   lse_weights <- matrixStats::logSumExp(log_weights)
   log_n_particles <- log(n_particles)
   int_llik <- int_llik + lse_weights - log_n_particles
-  #normalise weightsb
+  #normalise weights
   norm_weights <- exp(log_weights - lse_weights)
-  if (sum(norm_weights, na.rm = T) != 1) {
-    norm_weights <- rep(1/n_particles, n_particles)
-  }
   if (n_particles > 1) {
     x_resample <- sample(x_sample, n_particles, replace = T, prob = norm_weights)
   } else {
@@ -38,18 +44,24 @@ sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_preva
 
   #Day 2:N
   for (i in 2:N) {
-    x_sample <- extraDistr::rtpois(n_particles, 1 + noisy_prevalence[i + 1, 2] / proportion_obs, a = 0)
+    lambda <- max(1, noisy_prevalence[i + 1, 2] / proportion_obs)
+    a <- max(0, noisy_prevalence[i + 1, 2] - 1)
+    x_sample <- extraDistr::rtpois(n_particles, lambda, a = a)
     log_weights <- extraDistr::dskellam(x_sample - x_resample, birth_rate, death_rate, log = T) +
                    dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * birth_rate / x_sample, log = T) +
                    dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T) -
-                   extraDistr::dtpois(x_sample, 1 + noisy_prevalence[i + 1, 2] / proportion_obs, a = 0, log = T)
+                   extraDistr::dtpois(x_sample, lambda, a = a, log = T)
+
+    #if all impossible, then mission abort
+    if (max(log_weights) == -Inf) {
+      int_llik <- -Inf
+      break
+    }
+
     lse_weights <- matrixStats::logSumExp(log_weights)
     int_llik <- int_llik + lse_weights - log_n_particles
     #normalise weights
     norm_weights <- exp(log_weights - lse_weights)
-    if (sum(norm_weights, na.rm = T) != 1) {
-      norm_weights <- rep(1/n_particles, n_particles)
-    }
     if (n_particles > 1) {
       x_resample <- sample(x_sample, n_particles, replace = T, prob = norm_weights)
     } else {
