@@ -15,12 +15,10 @@ smc <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate
     plot(prevalence_0, type="l")
   }
 
-  #prior is uniform
-  f_hat_old <- skellam_llik(birth_rate = b_old, death_rate = death_rate, prevalence = prev_old) +
-    genetic_llik(birth_rate = b_old, ptree = ptree, prevalence = prev_old, stop_time = stop_time) +
-    sum(dbinom(x = noisy_prevalence[-1,2], size = prev_old[-1,2], prob = proportion_obs, log = TRUE))
-
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
+
+  #prior is uniform
+  f_hat_old <- sir(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data)
 
   for (i in 1:iter) {
     j <- 100*i/iter
@@ -42,11 +40,7 @@ smc <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate
     }
 
     #step 2: compute likelihood
-    if (plot == T) {
-      f_hat_new <- sir(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, plot = T)
-    } else {
-      f_hat_new <- sir(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data)
-    }
+    f_hat_new <- sir(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, plot = plot)
 
     #step 3: compute acceptance probability
     logr <- f_hat_new - f_hat_old
