@@ -53,5 +53,5 @@ sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_preva
     lines(sample)
   }
 
-  return(list("int_llik"=int_llik, "samples"=samples))
+  return(int_llik)
 }
