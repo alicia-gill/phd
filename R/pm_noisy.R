@@ -1,4 +1,24 @@
-#noisy epidemic
+#' Pseudo-Marginal MCMC with Partial Epidemic Data
+#'
+#' Implements a pseudo-marginal MCMC when the epidemic has been partially observed with known proportion.
+#'
+#' @param iter number of iterations to run the algorithm for.
+#' @param birth_rate_0 initial value of the birth rate.
+#' @param max_birth_rate maximum value for the birth rate. 100 by default.
+#' @param prevalence_0 data frame of initial values for the prevalence per day.
+#' @param death_rate death rate of the epidemic.
+#' @param ptree object of class phylo.
+#' @param noisy_prevalence data frame of observed prevalence per day.
+#' @param proportion_obs proportion of cases observed.
+#' @param n_particles number of particles used in the importance sampling.
+#'
+#' @return list containing: birth rate, acceptance rate, run time in seconds
+#' @export
+#'
+#' @examples
+#' prev_0 <- data.frame("day"=0:50, "prev"=c(1, floor(noisy_prev[-1,2] / proportion_obs)))
+#' prev_0[prev_0[,2] == 0, 2] <- 1
+#' pm_noisy(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
 pm_noisy <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles) {
   sys_time <- as.numeric(Sys.time())
 

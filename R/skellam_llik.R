@@ -1,3 +1,17 @@
+#' Skellam Log-Likelihood
+#'
+#' Approximates the probability of the prevalence given the birth and death rate.
+#'
+#' @param birth_rate birth rate of the epidemic.
+#' @param death_rate death rate of the epidemic.
+#' @param prevalence data frame of prevalence per day.
+#' @param log logical; if TRUE, log-likelihood is given.
+#'
+#' @return log-likelihood.
+#' @export
+#'
+#' @examples
+#' skellam_llik(birth_rate = 0.2, death_rate = 0.1, prevalence = prev)
 skellam_llik <- function(birth_rate, death_rate, prevalence, log=T) {
   b <- birth_rate
   d <- death_rate

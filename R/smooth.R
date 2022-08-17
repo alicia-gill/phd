@@ -1,3 +1,15 @@
+#' Smoothing
+#'
+#' Scales up and smooths the observed prevalence.
+#'
+#' @param noisy_prevalence data frame of observed prevalence per day.
+#' @param proportion_obs proportion of cases observed.
+#'
+#' @return data frame of estimated prevalence per day.
+#' @export
+#'
+#' @examples
+#' smooth(noisy_prevalence = noisy_prev, proportion_obs = 0.2)
 smooth <- function(noisy_prevalence, proportion_obs) {
   n_days <- nrow(noisy_prevalence) - 1
   prev <- noisy_prevalence[,2]

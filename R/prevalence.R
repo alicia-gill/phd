@@ -1,11 +1,11 @@
 #' Prevalence
 #'
-#' Turns simulated epidemic into a vector of cases per day.
+#' Turns epidemic into a data frame of day and prevalence on that day.
 #'
-#' @param epidemic The output from epidemic.R.
-#' @param stop_time The number of days the epidemic simulation was run for.
+#' @param epidemic output from epidemic().
+#' @param stop_time number of days the epidemic simulation was run for.
 #'
-#' @return A data frame with 2 columns and N+1 rows. Column 1 is day and column 2 is number of cases.
+#' @return data frame with 2 columns and N+1 rows. Column 1 is day and column 2 is number of cases.
 #' @export
 #'
 #' @examples

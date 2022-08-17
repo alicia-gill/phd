@@ -1,3 +1,19 @@
+#' Metropolis--Hastings using Epidemic and Genetic data
+#'
+#' Runs a Metropolis--Hastings algorithm to find the birth rate of the epidemic.
+#'
+#' @param iter number of iterations to run the algorithm for.
+#' @param birth_rate_0 initial value of the birth rate.
+#' @param max_birth_rate maximum value for the birth rate. 100 by default.
+#' @param death_rate death rate of the epidemic.
+#' @param prevalence data frame of prevalence per day.
+#' @param ptree object of class phylo.
+#'
+#' @return list containing: birth rate, acceptance rate, run time in seconds
+#' @export
+#'
+#' @examples
+#' mh_epigen(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, prevalence = prev, ptree = sample_tree)
 mh_epigen <- function(iter, birth_rate_0, max_birth_rate=100, death_rate, prevalence, ptree) {
   sys_time <- as.numeric(Sys.time()) #time at beginning of run
 

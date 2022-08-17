@@ -1,4 +1,21 @@
-#no epidemic
+#' Pseudo-Marginal MCMC with No Epidemic Data - Parallelised
+#'
+#' Parallelised version of pm_noepi().
+#'
+#' @param iter number of iterations to run the algorithm for.
+#' @param birth_rate_0 initial value of the birth rate.
+#' @param max_birth_rate maximum value for the birth rate. 100 by default.
+#' @param prevalence_0 data frame of initial values for the prevalence per day.
+#' @param death_rate death rate of the epidemic.
+#' @param ptree object of class phylo.
+#' @param n_particles number of particles used in the importance sampling.
+#' @param n_cores number of cores to use in parallelisation
+#'
+#' @return list containing: birth rate, acceptance rate, run time in seconds
+#' @export
+#'
+#' @examples
+#' pm_noepi_parallel(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = data.frame("day"=0:50, "prev"=rep(1,51)). death_rate = 0.1, ptree = sample_tree, n_particles = 100, n_cores = 8)
 pm_noepi_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, n_particles, n_cores) {
   sys_time <- as.numeric(Sys.time())
 

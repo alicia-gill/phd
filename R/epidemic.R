@@ -1,14 +1,12 @@
-#starts with 1 infected person
-#takes constant birth and death rates
 #' Simulate epidemics
 #'
-#' Simulates a birth-death epidemic with 1 infected on day 0.
+#' Simulates a birth-death epidemic with constant birth and death rates and 1 infected on day 0.
 #'
-#' @param birth_rate The birth rate of the epidemic.
-#' @param death_rate The death rate of the epidemic.
-#' @param stop_time The number of days to run the epidemic simulation for.
+#' @param birth_rate birth rate of the epidemic.
+#' @param death_rate death rate of the epidemic.
+#' @param stop_time number of days to run the epidemic simulation for.
 #'
-#' @return A data frame with: Index, Parent Index, Infection Status, Infection Time, Removal Time
+#' @return data frame with: Index, Parent Index, Infection Status, Infection Time, Removal Time
 #' @export
 #'
 #' @examples

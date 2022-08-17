@@ -1,3 +1,15 @@
+#' Phylogenetic Tree
+#'
+#' Represents the epidemic as a phylogenetic tree.
+#'
+#' @param epidemic output from epidemic().
+#' @param stop_time number of days the epidemic simulation was run for.
+#'
+#' @return object of class phylo.
+#' @export
+#'
+#' @examples
+#' phylo_tree(epidemic = epi, stop_time = 50)
 phylo_tree <- function(epidemic, stop_time) {
   n_total <- nrow(epidemic)
 

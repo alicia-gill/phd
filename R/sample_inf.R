@@ -1,3 +1,15 @@
+#' Sample from Infected
+#'
+#' Samples and keeps those infected at the present day (i.e. the leaves) with probability pi.
+#'
+#' @param ptree object of class phylo.
+#' @param pi probability of sampling a leaf.
+#'
+#' @return object of class phylo; the tree keeping only the sampled leaves.
+#' @export
+#'
+#' @examples
+#' sample_inf(ptree = full_tree, pi = 0.1)
 sample_inf <- function(ptree, pi) {
   if (pi < 0 | pi > 1) {
     warning("pi must be between 0 and 1")

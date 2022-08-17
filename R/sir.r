@@ -1,4 +1,21 @@
-sir <- function(n_particles, birth_rate, death_rate, proportion_obs, noisy_prevalence, genetic_data, plot=F) {
+#' Sample Importance Resample
+#'
+#' Implements an SIR algorithm and returns an approximated log-likelihood.
+#'
+#' @param n_particles number of particles used in the sampling.
+#' @param birth_rate birth rate of the epidemic.
+#' @param death_rate death rate of the epidemic.
+#' @param noisy_prevalence data frame of observed prevalence per day.
+#' @param proportion_obs proportion of cases observed.
+#' @param genetic_data data frame of day, number of lineages and number of coalescences.
+#' @param plot logical; if TRUE, then plots a trajectory according to weight.
+#'
+#' @return log-likelihood
+#' @export
+#'
+#' @examples
+#' sir(n_particles = 100, birth_rate = 0.2, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
+sir <- function(n_particles, birth_rate, death_rate, noisy_prevalence, proportion_obs, genetic_data, plot=F) {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1
   samples <- matrix(nrow = N + 1, ncol = n_particles)
