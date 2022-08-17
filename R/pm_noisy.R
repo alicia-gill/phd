@@ -61,8 +61,8 @@ pm_noisy <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death
 
     #step 2: compute likelihood
     f_hat_q <- unlist(lapply(1:n_particles, propose_pois, noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs, birth_rate = b_new, death_rate = death_rate, ptree = ptree))
-    f_hat_log <- f_hat_q[seq(1,n_particles,by=2)]
-    q_log <- f_hat_q[seq(2,n_particles,by=2)]
+    f_hat_log <- f_hat_q[seq(1,2*n_particles,by=2)]
+    q_log <- f_hat_q[seq(2,2*n_particles,by=2)]
     f_hat_new <- matrixStats::logSumExp(f_hat_log) - log(n_particles)
     q_new <- matrixStats::logSumExp(q_log) - log(n_particles)
 
