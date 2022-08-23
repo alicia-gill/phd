@@ -38,8 +38,11 @@ pm_noisy_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence
     sum(dbinom(x = noisy_prevalence[-1,2], size = prev_old[-1,2], prob = proportion_obs, log = TRUE))
 
   smooth_prev <- smooth(noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs)
-  lambda <- 0.1 + smooth_prev[-1,2]
-  q_old <- sum(extraDistr::dtpois(prev_old[-1,2] - smooth_prev[-1,2] + round(lambda), lambda = lambda, a = noisy_prevalence[-1,2] + round(lambda) - smooth_prev[-1,2] - 1, log = TRUE))
+  lambda <- pmax(1, smooth_prev[-1,2])
+  a <- noisy_prevalence[-1,2] + round(lambda) - smooth_prev[-1,2]
+  q_old <- sum(extraDistr::dtpois(prev_old[-1,2] - smooth_prev[-1,2] + round(lambda), lambda = lambda, a = a, log = TRUE))
+
+  llik_old <- f_hat_old - q_old
 
   for (i in 1:iter) {
     j <- 100*i/iter
@@ -61,14 +64,11 @@ pm_noisy_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence
     }
 
     #step 2: compute likelihood
-    f_hat_q <- unlist(parallel::mclapply(1:n_particles, propose_pois, noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs, birth_rate = b_new, death_rate = death_rate, ptree = ptree, mc.cores = n_cores))
-    f_hat_log <- f_hat_q[seq(1,2*n_particles,by=2)]
-    q_log <- f_hat_q[seq(2,2*n_particles,by=2)]
-    f_hat_new <- matrixStats::logSumExp(f_hat_log) - log(n_particles)
-    q_new <- matrixStats::logSumExp(q_log) - log(n_particles)
+    llik <- unlist(parallel::mclapply(1:n_particles, propose_pois2, birth_rate = b_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs, ptree = ptree, mc.cores = n_cores))
+    llik_new <- matrixStats::logSumExp(llik) - log(n_particles)
 
     #step 3: compute acceptance probability
-    logr <- f_hat_new - q_new - f_hat_old + q_old
+    logr <- llik_new - llik_old
     loga <- min(0,logr)
     a <- exp(loga)
 
@@ -77,8 +77,7 @@ pm_noisy_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence
     if (u <= a) {
       n_accepted <- n_accepted + 1
       b_old <- b_new
-      f_hat_old <- f_hat_new
-      q_old <- q_new
+      llik_old <- llik_new
     }
     output$birth_rate[i] <- b_old
   }
