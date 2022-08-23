@@ -16,7 +16,7 @@
 #' propose_pois2(birth_rate = 0.2, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, ptree = sample_tree)
 propose_pois2 <- function(birth_rate, death_rate, noisy_prevalence, proportion_obs, ptree, ...) {
   smooth_prev <- smooth(noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs)
-  lambda <- max(1, smooth_prev[-1,2])
+  lambda <- pmax(1, smooth_prev[-1,2])
   a <- noisy_prevalence[-1,2] + round(lambda) - smooth_prev[-1,2]
 
   n_days <- nrow(noisy_prevalence) - 1
