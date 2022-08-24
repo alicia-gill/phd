@@ -12,6 +12,7 @@
 #' @param proportion_obs proportion of cases observed.
 #' @param n_particles number of particles used in the importance sampling.
 #' @param n_cores number of cores to use in the parallelisation.
+#' @param print logical; if TRUE, prints percentage of the way through the chain.
 #'
 #' @return list containing: birth rate, acceptance rate, run time in seconds
 #' @export
@@ -20,7 +21,7 @@
 #' prev_0 <- data.frame("day"=0:50, "prev"=c(1, floor(noisy_prev[-1,2] / proportion_obs)))
 #' prev_0[prev_0[,2] == 0, 2] <- 1
 #' pm_noisy_parallel(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100, n_cores = 8)
-pm_noisy_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, n_cores) {
+pm_noisy_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, n_cores, print=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(noisy_prevalence)
@@ -45,9 +46,11 @@ pm_noisy_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence
   llik_old <- f_hat_old - q_old
 
   for (i in 1:iter) {
-    j <- 100*i/iter
-    if (j %% 1 == 0) {
-      print(paste0(j,"%"))
+    if (print == T) {
+      j <- 100*i/iter
+      if (j %% 1 == 0) {
+        print(paste0(j,"%"))
+      }
     }
 
     #step 1: sample b_new and sample prev_new

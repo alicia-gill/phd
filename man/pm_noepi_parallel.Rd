@@ -12,7 +12,8 @@ pm_noepi_parallel(
   death_rate,
   ptree,
   n_particles,
-  n_cores
+  n_cores,
+  print = F
 )
 }
 \arguments{
@@ -30,7 +31,9 @@ pm_noepi_parallel(
 
 \item{n_particles}{number of particles used in the importance sampling.}
 
-\item{n_cores}{number of cores to use in parallelisation}
+\item{n_cores}{number of cores to use in parallelisation.}
+
+\item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 }
 \value{
 list containing: birth rate, acceptance rate, run time in seconds

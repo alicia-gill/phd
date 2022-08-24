@@ -11,7 +11,8 @@ mh_epigen_bd(
   death_rate_0,
   max_death_rate = 100,
   prevalence,
-  ptree
+  ptree,
+  print = F
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ mh_epigen_bd(
 \item{prevalence}{data frame of prevalence per day.}
 
 \item{ptree}{object of class phylo.}
+
+\item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 }
 \value{
 list containing: birth rate, death rate, acceptance rate, run time in seconds

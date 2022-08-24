@@ -8,13 +8,14 @@
 #' @param death_rate death rate of the epidemic.
 #' @param prevalence data frame of prevalence per day.
 #' @param ptree object of class phylo.
+#' @param print logical; if TRUE, prints percentage of the way through the chain.
 #'
 #' @return list containing: birth rate, acceptance rate, run time in seconds
 #' @export
 #'
 #' @examples
 #' mh_epigen(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, prevalence = prev, ptree = sample_tree)
-mh_epigen <- function(iter, birth_rate_0, max_birth_rate=100, death_rate, prevalence, ptree) {
+mh_epigen <- function(iter, birth_rate_0, max_birth_rate=100, death_rate, prevalence, ptree, print=F) {
   sys_time <- as.numeric(Sys.time()) #time at beginning of run
 
   #initialise output
@@ -35,9 +36,11 @@ mh_epigen <- function(iter, birth_rate_0, max_birth_rate=100, death_rate, preval
 
   for (i in 1:iter) {
     #prints how far through the chain we are
-    j <- 100*i/iter
-    if (j %% 1 == 0) {
-      print(paste0(j,"%"))
+    if (print == T) {
+      j <- 100*i/iter
+      if (j %% 1 == 0) {
+        print(paste0(j,"%"))
+      }
     }
 
     #step 1 - generate new value of beta (adaptive MCMC)

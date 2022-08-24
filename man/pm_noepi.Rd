@@ -11,7 +11,8 @@ pm_noepi(
   prevalence_0,
   death_rate,
   ptree,
-  n_particles
+  n_particles,
+  print = F
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ pm_noepi(
 \item{ptree}{object of class phylo.}
 
 \item{n_particles}{number of particles used in the importance sampling.}
+
+\item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 }
 \value{
 list containing: birth rate, acceptance rate, run time in seconds

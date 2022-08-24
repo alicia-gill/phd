@@ -14,6 +14,7 @@ smc(
   noisy_prevalence,
   proportion_obs,
   n_particles,
+  print = F,
   plot = F
 )
 }
@@ -35,6 +36,8 @@ smc(
 \item{proportion_obs}{proportion of cases observed.}
 
 \item{n_particles}{number of particles used in the importance sampling.}
+
+\item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 
 \item{plot}{logical; if TRUE, then plots a trajectory according to weight.}
 }

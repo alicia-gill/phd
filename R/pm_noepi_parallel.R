@@ -9,14 +9,15 @@
 #' @param death_rate death rate of the epidemic.
 #' @param ptree object of class phylo.
 #' @param n_particles number of particles used in the importance sampling.
-#' @param n_cores number of cores to use in parallelisation
+#' @param n_cores number of cores to use in parallelisation.
+#' @param print logical; if TRUE, prints percentage of the way through the chain.
 #'
 #' @return list containing: birth rate, acceptance rate, run time in seconds
 #' @export
 #'
 #' @examples
 #' pm_noepi_parallel(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = data.frame("day"=0:50, "prev"=rep(1,51)). death_rate = 0.1, ptree = sample_tree, n_particles = 100, n_cores = 8)
-pm_noepi_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, n_particles, n_cores) {
+pm_noepi_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, n_particles, n_cores, print=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(prevalence_0)
@@ -33,9 +34,11 @@ pm_noepi_parallel <- function(iter, birth_rate_0, max_birth_rate=100, prevalence
   #proposal is skellam, so cancels
 
   for (i in 1:iter) {
-    j <- 100*i/iter
-    if (j %% 1 == 0) {
-      print(paste0(j,"%"))
+    if (print == T) {
+      j <- 100*i/iter
+      if (j %% 1 == 0) {
+        print(paste0(j,"%"))
+      }
     }
 
     #step 1: sample b_new and sample prev_new

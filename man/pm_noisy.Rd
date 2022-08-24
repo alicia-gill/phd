@@ -13,7 +13,8 @@ pm_noisy(
   ptree,
   noisy_prevalence,
   proportion_obs,
-  n_particles
+  n_particles,
+  print = F
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ pm_noisy(
 \item{proportion_obs}{proportion of cases observed.}
 
 \item{n_particles}{number of particles used in the importance sampling.}
+
+\item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 }
 \value{
 list containing: birth rate, acceptance rate, run time in seconds

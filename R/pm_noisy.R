@@ -11,6 +11,7 @@
 #' @param noisy_prevalence data frame of observed prevalence per day.
 #' @param proportion_obs proportion of cases observed.
 #' @param n_particles number of particles used in the importance sampling.
+#' @param print logical; if TRUE, prints percentage of the way through the chain.
 #'
 #' @return list containing: birth rate, acceptance rate, run time in seconds
 #' @export
@@ -19,7 +20,7 @@
 #' prev_0 <- data.frame("day"=0:50, "prev"=c(1, floor(noisy_prev[-1,2] / proportion_obs)))
 #' prev_0[prev_0[,2] == 0, 2] <- 1
 #' pm_noisy(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
-pm_noisy <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles) {
+pm_noisy <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, print=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(noisy_prevalence)
@@ -33,17 +34,22 @@ pm_noisy <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death
 
   #prior is uniform
   f_hat_old <- skellam_llik(birth_rate = b_old, death_rate = death_rate, prevalence = prev_old) +
-               genetic_llik(birth_rate = b_old, ptree = ptree, prevalence = prev_old, stop_time = stop_time) +
-               sum(dbinom(x = noisy_prevalence[-1,2], size = prev_old[-1,2], prob = proportion_obs, log = TRUE))
+    genetic_llik(birth_rate = b_old, ptree = ptree, prevalence = prev_old, stop_time = stop_time) +
+    sum(dbinom(x = noisy_prevalence[-1,2], size = prev_old[-1,2], prob = proportion_obs, log = TRUE))
 
   smooth_prev <- smooth(noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs)
-  lambda <- 0.1 + smooth_prev[-1,2]
-  q_old <- sum(extraDistr::dtpois(prev_old[-1,2] - smooth_prev[-1,2] + round(lambda), lambda = lambda, a = noisy_prevalence[-1,2] + round(lambda) - smooth_prev[-1,2] - 1, log = TRUE))
+  lambda <- pmax(1, smooth_prev[-1,2])
+  a <- noisy_prevalence[-1,2] + round(lambda) - smooth_prev[-1,2]
+  q_old <- sum(extraDistr::dtpois(prev_old[-1,2] - smooth_prev[-1,2] + round(lambda), lambda = lambda, a = a, log = TRUE))
+
+  llik_old <- f_hat_old - q_old
 
   for (i in 1:iter) {
-    j <- 100*i/iter
-    if (j %% 1 == 0) {
-      print(paste0(j,"%"))
+    if (print == T) {
+      j <- 100*i/iter
+      if (j %% 1 == 0) {
+        print(paste0(j,"%"))
+      }
     }
 
     #step 1: sample b_new and sample prev_new
@@ -60,14 +66,11 @@ pm_noisy <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death
     }
 
     #step 2: compute likelihood
-    f_hat_q <- unlist(lapply(1:n_particles, propose_pois, noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs, birth_rate = b_new, death_rate = death_rate, ptree = ptree))
-    f_hat_log <- f_hat_q[seq(1,2*n_particles,by=2)]
-    q_log <- f_hat_q[seq(2,2*n_particles,by=2)]
-    f_hat_new <- matrixStats::logSumExp(f_hat_log) - log(n_particles)
-    q_new <- matrixStats::logSumExp(q_log) - log(n_particles)
+    llik <- unlist(lapply(1:n_particles, propose_pois2, birth_rate = b_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs, ptree = ptree, mc.cores = n_cores))
+    llik_new <- matrixStats::logSumExp(llik) - log(n_particles)
 
     #step 3: compute acceptance probability
-    logr <- f_hat_new - q_new - f_hat_old + q_old
+    logr <- llik_new - llik_old
     loga <- min(0,logr)
     a <- exp(loga)
 
@@ -76,8 +79,7 @@ pm_noisy <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death
     if (u <= a) {
       n_accepted <- n_accepted + 1
       b_old <- b_new
-      f_hat_old <- f_hat_new
-      q_old <- q_new
+      llik_old <- llik_new
     }
     output$birth_rate[i] <- b_old
   }
@@ -86,4 +88,3 @@ pm_noisy <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death
   output$run_time <- as.numeric(Sys.time()) - sys_time
   return(output)
 }
-
