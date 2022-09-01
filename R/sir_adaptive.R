@@ -21,6 +21,8 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
   N <- nrow(noisy_prevalence) - 1
   samples <- matrix(nrow = N + 1, ncol = n_particles)
   weights <- matrix(nrow = N + 1, ncol = n_particles)
+  resample <- rep(NA, N)
+  particles <- rep(n_particles, N + 1)
   #first day always has 1
   samples[1, ] <- 1
   weights[1, ] <- 1/n_particles
@@ -51,13 +53,16 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
   }
 
   #normalise weights
-  lse_weights <- matrixStats::logSumExp(log_weights + log(w))
-  int_llik <- int_llik + lse_weights
+  lse_weights <- matrixStats::logSumExp(log_weights)
+  mean_weights <- matrixStats::logSumExp(log_weights + log(w))
+  int_llik <- int_llik + mean_weights
   norm_weights <- exp(log_weights - lse_weights)
 
   #resampling
   ess <- 1 / sum(norm_weights^2)
+  particles[2] <- round(ess)
   if (ess <= ess_threshold) {
+    resample[1] <- 1
     w <- rep(1/n_particles, n_particles)
     if (n_particles > 1) {
       x_resample <- sample(x_sample, n_particles, replace = T, prob = norm_weights)
@@ -65,6 +70,7 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
       x_resample <- x_sample
     }
   } else {
+    resample[1] <- 0
     w <- norm_weights
     x_resample <- x_sample
   }
@@ -93,14 +99,17 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
     }
 
     #normalise weights
-    lse_weights <- matrixStats::logSumExp(log_weights + log(w))
-    int_llik <- int_llik + lse_weights
-    norm_weights <- exp(log_weights + log(w) - lse_weights)
+    lse_weights <- matrixStats::logSumExp(log_weights)
+    mean_weights <- matrixStats::logSumExp(log_weights + log(w))
+    int_llik <- int_llik + mean_weights
+    norm_weights <- exp(log_weights - lse_weights)
 
     #resampling
     ess <- 1 / sum(norm_weights^2)
+    particles[i+1] <- round(ess)
     #if the ess is below threshold, then resample
     if (ess <= ess_threshold) {
+      resample[i] <- 1
       w <- rep(1/n_particles, n_particles)
       #if n_particles==1, then sample() is weird
       if (n_particles > 1) {
@@ -109,6 +118,7 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
         x_resample <- x_sample
       }
     } else {
+      resample[i] <- 0
       w <- norm_weights
       x_resample <- x_sample
     }
@@ -125,4 +135,5 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
   }
 
   return(int_llik)
+#  return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
 }
