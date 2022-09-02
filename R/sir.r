@@ -38,7 +38,7 @@ sir <- function(n_particles, birth_rate, death_rate, noisy_prevalence, proportio
     a <- max(0, noisy_prevalence[i + 1, 2] - 1)
     #sample
     x_sample <- extraDistr::rtpois(n_particles, lambda, a = a)
-    log_weights <- extraDistr::dskellam(x_sample - x_resample, birth_rate*x_resample, death_rate*x_resample, log = T) +
+    log_weights <- smc_skellam(x_sample, x_resample, birth_rate, death_rate) +
       dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * birth_rate / x_sample, log = T) +
       dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T) -
       extraDistr::dtpois(x_sample, lambda, a = a, log = T)
