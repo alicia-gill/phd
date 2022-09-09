@@ -47,10 +47,12 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
     dbinom(noisy_prevalence[2, 2], x_sample, proportion_obs, log = T) -
     extraDistr::dtpois(x_sample, lambda = lambda, a = a, log = T)
 
+  log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
+
   #if all impossible, then mission abort
   if (max(log_weights) == -Inf) {
     int_llik <- -Inf
-    break
+    return(int_llik)
   }
 
   #normalise weights
@@ -93,10 +95,12 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
       dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T) -
       extraDistr::dtpois(x_sample, lambda, a = a, log = T)
 
+    log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
+
     #if all impossible, then mission abort
     if (max(log_weights) == -Inf) {
       int_llik <- -Inf
-      break
+      return(int_llik)
     }
 
     #normalise weights
