@@ -53,7 +53,7 @@ smc_adaptive <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, d
     }
 
     #step 1: sample b_new and sample prev_new
-    w <- rnorm(1, 0, 1)
+    w <- rnorm(1, 0, 0.1)
     b_new <- b_old + exp(s)*w
     #if proposal is negative or larger than max_birth_rate, then bounce back
     while (b_new < 0 | b_new > max_birth_rate) {
@@ -73,7 +73,8 @@ smc_adaptive <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, d
     logr <- f_hat_new - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
-    s <- s + (a - 0.1) / i
+
+    s <- s + (a - 0.1) / (i + 10)^0.6
 
     #step 4: accept/reject
     u <- runif(1,0,1)
