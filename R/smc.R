@@ -25,7 +25,7 @@ smc <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
 
-  output <- list("birth_rate" = birth_rate_0, "acceptance_rate" = 0, "run_time" = 0)
+  output <- list("birth_rate" = birth_rate_0, "smc_llik" = 0, "acceptance_rate" = 0, "run_time" = 0)
   n_accepted <- 0
 
   b_old <- birth_rate_0
@@ -63,6 +63,7 @@ smc <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate
 
     #step 2: compute likelihood
     f_hat_new <- sir(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, plot = plot)
+    output$smc_llik[i] <- f_hat_new
 
     #step 3: compute acceptance probability
     logr <- f_hat_new - f_hat_old

@@ -34,7 +34,7 @@ smc_adaptive_bp <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0
     plot(prev_old, type="l")
   }
 
-  output <- list("birth_rate" = b_old, "proportion_obs" = p_old, "acceptance_rate" = 0, "run_time" = 0)
+  output <- list("birth_rate" = b_old, "proportion_obs" = p_old, "smc_llik" = 0, "acceptance_rate" = 0, "run_time" = 0)
   n_accepted <- 0
 
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
@@ -76,6 +76,7 @@ smc_adaptive_bp <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0
 
     #step 2: compute likelihood
     f_hat_new <- sir_adaptive(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = p_new, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+    output$smc_llik[i] <- f_hat_new
 
     #step 3: compute acceptance probability
     logr <- f_hat_new - f_hat_old
