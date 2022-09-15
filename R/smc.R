@@ -37,6 +37,9 @@ smc <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate
 
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
 
+  #adaptive metropolis
+  s <- 0
+
   #prior is uniform
   f_hat_old <- sir(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data)
 
@@ -49,8 +52,8 @@ smc <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate
     }
 
     #step 1: sample b_new and sample prev_new
-    eps <- rnorm(1,0,0.01)
-    b_new <- b_old + eps
+    w <- rnorm(1, 0, 0.1)
+    b_new <- b_old + exp(s)*w
     #if proposal is negative or larger than max_birth_rate, then bounce back
     while (b_new < 0 | b_new > max_birth_rate) {
       if (b_new < 0) {
@@ -69,6 +72,8 @@ smc <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate
     logr <- f_hat_new - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
+
+    s <- s + (a - 0.1) / (i + 10)^0.6
 
     #step 4: accept/reject
     u <- runif(1,0,1)
