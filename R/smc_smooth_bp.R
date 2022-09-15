@@ -38,6 +38,16 @@ smc_smooth_bp <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, 
 
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
 
+  #adaptive mh
+  s <- 0
+  X <- c(b_old, p_old)
+  mu_old <- X
+  Sigma_old <- matrix(c(1, 0, 0, 1), nrow = 2, ncol = 2)
+
+  mu <- c(0, 0)
+  Sigma <- matrix(c(0.1, 0.03, 0.03, 0.1), nrow = 2, ncol = 2)
+
+
   #prior is uniform
   f_hat_old <- sir_smooth(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = p_old, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data)
 
@@ -50,8 +60,14 @@ smc_smooth_bp <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, 
     }
 
     #step 1: sample b_new, p_new and sample prev_new
-    eps_b <- rnorm(1, 0, 0.01)
-    b_new <- b_old + eps_b
+    #adaptive mh
+    w <- MASS::mvrnorm(n = 1, mu = mu, Sigma = Sigma)
+    sqrtSigma <- expm::sqrtm(Sigma_old)
+    Y <- X + exp(s) * sqrtSigma %*% w
+
+    b_new <- Y[1]
+    p_new <- Y[2]
+
     #if proposal is negative or larger than max_birth_rate, then bounce back
     while (b_new < 0 | b_new > max_birth_rate) {
       if (b_new < 0) {
@@ -61,9 +77,6 @@ smc_smooth_bp <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, 
         b_new <- max_birth_rate - b_new
       }
     }
-
-    eps_p <- rnorm(1, 0, 0.01)
-    p_new <- p_old + eps_p
     while (p_new < 0 | p_new > 1) {
       if (p_new < 0) {
         p_new <- -p_new
@@ -82,6 +95,10 @@ smc_smooth_bp <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, 
     loga <- min(0,logr)
     a <- exp(loga)
 
+    #adaptive mh
+    eta <- (i + 10)^(-0.6)
+    s <- s + (a - 0.1) * eta
+
     #step 4: accept/reject
     u <- runif(1,0,1)
     if (u <= a) {
@@ -92,6 +109,18 @@ smc_smooth_bp <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, 
     }
     output$birth_rate[i] <- b_old
     output$proportion_obs[i] <- p_old
+
+    #adaptive mh
+    X <- c(b_old, p_old)
+    mu_new <- (1 - eta) * mu_old + eta * X
+    Sigma_new <- (1 - eta) * Sigma_old + eta * (X - mu_old) %*% t(X - mu_old)
+
+    norm <- norm(mu_new, type="2")
+    evalues <- eigen(Sigma_new)$values
+    if (norm <= 1000 && evalues >= 1/1000 && evalues <= 1000) {
+      mu_old <- mu_new
+      Sigma_old <- Sigma_new
+    }
   }
 
   output$acceptance_rate <- n_accepted/iter
