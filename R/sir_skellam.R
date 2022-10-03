@@ -38,10 +38,8 @@ sir_skellam <- function(n_particles, birth_rate, death_rate, noisy_prevalence, p
   x_sample <- 1 + extraDistr::rskellam(n = n_particles, mu1 = birth_rate, mu2 = death_rate)
 
   #weights
-  log_weights <- smc_skellam(x_sample, 1, birth_rate, death_rate, log = T) +
-    dbinom(genetic_data[2, 3], choose(genetic_data[2, 2], 2), 2 * birth_rate / x_sample, log = T) +
-    dbinom(noisy_prevalence[2, 2], x_sample, proportion_obs, log = T) -
-    extraDistr::dskellam(x_sample - 1, birth_rate, death_rate, log = T)
+  log_weights <- dbinom(genetic_data[2, 3], choose(genetic_data[2, 2], 2), 2 * birth_rate / x_sample, log = T) +
+    dbinom(noisy_prevalence[2, 2], x_sample, proportion_obs, log = T)
 
   log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
   log_weights <- ifelse(is.na(log_weights), -Inf, log_weights)
@@ -83,10 +81,8 @@ sir_skellam <- function(n_particles, birth_rate, death_rate, noisy_prevalence, p
     x_sample <- x_resample + extraDistr::rskellam(n_particles, birth_rate * x_resample, death_rate * x_resample)
 
     #compute weights
-    log_weights <- smc_skellam(x_sample, x_resample, birth_rate, death_rate) +
-      dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * birth_rate / x_sample, log = T) +
-      dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T) -
-      extraDistr::dskellam(x_sample - x_resample, birth_rate * x_resample, death_rate * x_resample, log = T)
+    log_weights <- dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * birth_rate / x_sample, log = T) +
+      dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T)
 
     log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
     log_weights <- ifelse(is.na(log_weights), -Inf, log_weights)
