@@ -8,7 +8,6 @@ smc_skellam_bp(
   iter,
   birth_rate_0,
   max_birth_rate = 100,
-  prevalence_0,
   proportion_obs_0,
   death_rate,
   ptree,
@@ -25,8 +24,6 @@ smc_skellam_bp(
 \item{birth_rate_0}{initial value of the birth rate.}
 
 \item{max_birth_rate}{maximum value for the birth rate. 100 by default.}
-
-\item{prevalence_0}{data frame of initial values for the prevalence per day.}
 
 \item{proportion_obs_0}{initial value of the proportion of cases observed.}
 
@@ -51,5 +48,5 @@ list containing: birth rate, proportion observed, acceptance rate, run time in s
 Implements an SMC-MCMC when the epidemic has been partially observed with unknown proportion.
 }
 \examples{
-smc_adaptive_bp(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, proportion_obs_0 = 0.2, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, n_particles = 100)
+smc_adaptive_bp(iter = 100000, birth_rate_0 = 0.1, proportion_obs_0 = 0.2, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, n_particles = 100)
 }

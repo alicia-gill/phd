@@ -19,8 +19,8 @@
 #' @export
 #'
 #' @examples
-#' smc_skellam_b(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
-smc_skellam_b <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold=n_particles/2, print=F, plot=F) {
+#' smc_skellam_b(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
+smc_skellam_b <- function(iter, birth_rate_0, max_birth_rate=100, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold=n_particles/2, print=F, plot=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(noisy_prevalence)
@@ -30,10 +30,9 @@ smc_skellam_b <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, 
   n_accepted <- 0
 
   b_old <- birth_rate_0
-  prev_old <- prevalence_0
 
   if (plot == T) {
-    plot(prevalence_0, type="l")
+    plot(NA, xlim=c(0, stop_time), ylim=c(0,2000), xlab="Day", ylab="Prevalence")
   }
 
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
@@ -52,7 +51,7 @@ smc_skellam_b <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, 
       }
     }
 
-    #step 1: sample b_new and sample prev_new
+    #step 1: sample b_new
     w <- rnorm(1, 0, 0.1)
     b_new <- b_old + exp(s)*w
     #if proposal is negative or larger than max_birth_rate, then bounce back

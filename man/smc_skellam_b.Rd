@@ -8,7 +8,6 @@ smc_skellam_b(
   iter,
   birth_rate_0,
   max_birth_rate = 100,
-  prevalence_0,
   death_rate,
   ptree,
   noisy_prevalence,
@@ -26,8 +25,6 @@ smc_skellam_b(
 
 \item{max_birth_rate}{maximum value for the birth rate. 100 by default.}
 
-\item{prevalence_0}{data frame of initial values for the prevalence per day.}
-
 \item{death_rate}{death rate of the epidemic.}
 
 \item{ptree}{object of class phylo.}
@@ -43,6 +40,8 @@ smc_skellam_b(
 \item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 
 \item{plot}{logical; if TRUE, then plots a trajectory according to weight.}
+
+\item{prevalence_0}{data frame of initial values for the prevalence per day.}
 }
 \value{
 list containing: birth rate, acceptance rate, run time in seconds
@@ -51,5 +50,5 @@ list containing: birth rate, acceptance rate, run time in seconds
 Implements an SMC-MCMC with adaptive resampling when the epidemic has been partially observed with known proportion.
 }
 \examples{
-smc_skellam_b(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
+smc_skellam_b(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
 }

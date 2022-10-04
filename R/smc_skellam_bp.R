@@ -5,7 +5,6 @@
 #' @param iter number of iterations to run the algorithm for.
 #' @param birth_rate_0 initial value of the birth rate.
 #' @param max_birth_rate maximum value for the birth rate. 100 by default.
-#' @param prevalence_0 data frame of initial values for the prevalence per day.
 #' @param proportion_obs_0 initial value of the proportion of cases observed.
 #' @param death_rate death rate of the epidemic.
 #' @param ptree object of class phylo.
@@ -19,19 +18,18 @@
 #' @export
 #'
 #' @examples
-#' smc_adaptive_bp(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, proportion_obs_0 = 0.2, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, n_particles = 100)
-smc_skellam_bp <- function(iter, birth_rate_0, max_birth_rate=100, prevalence_0, proportion_obs_0, death_rate, ptree, noisy_prevalence, n_particles, ess_threshold = n_particles/2, print=F, plot=F) {
+#' smc_adaptive_bp(iter = 100000, birth_rate_0 = 0.1, proportion_obs_0 = 0.2, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, n_particles = 100)
+smc_skellam_bp <- function(iter, birth_rate_0, max_birth_rate=100, proportion_obs_0, death_rate, ptree, noisy_prevalence, n_particles, ess_threshold = n_particles/2, print=F, plot=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
 
   b_old <- birth_rate_0
-  prev_old <- prevalence_0
   p_old <- proportion_obs_0
 
   if (plot == T) {
-    plot(prev_old, type="l")
+    plot(NA, xlim=c(0, stop_time), ylim=c(0,2000), xlab="Day", ylab="Prevalence")
   }
 
   output <- list("birth_rate" = b_old, "proportion_obs" = p_old, "smc_llik" = 0, "acceptance_rate" = 0, "run_time" = 0)
