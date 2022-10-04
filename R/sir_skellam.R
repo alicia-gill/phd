@@ -33,50 +33,7 @@ sir_skellam <- function(n_particles, birth_rate, death_rate, noisy_prevalence, p
   x_resample <- samples[1, ]
   w <- weights[1, ]
 
-  #day 1
-  #sample
-  x_sample <- 1 + extraDistr::rskellam(n = n_particles, mu1 = birth_rate, mu2 = death_rate)
-
-  #weights
-  log_weights <- dbinom(genetic_data[2, 3], choose(genetic_data[2, 2], 2), 2 * birth_rate / x_sample, log = T) +
-    dbinom(noisy_prevalence[2, 2], x_sample, proportion_obs, log = T)
-
-  log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
-  log_weights <- ifelse(is.na(log_weights), -Inf, log_weights)
-
-  #if all impossible, then mission abort
-  if (max(log_weights) == -Inf) {
-    int_llik <- -Inf
-    return(int_llik)
-  }
-
-  #normalise weights
-  lse_weights <- matrixStats::logSumExp(log_weights)
-  mean_weights <- matrixStats::logSumExp(log_weights + log(w))
-  int_llik <- int_llik + mean_weights
-  norm_weights <- exp(log_weights - lse_weights)
-
-  #resampling
-  ess <- 1 / sum(norm_weights^2)
-  particles[2] <- round(ess)
-  if (ess <= ess_threshold) {
-    resample[1] <- 1
-    w <- rep(1/n_particles, n_particles)
-    if (n_particles > 1) {
-      x_resample <- sample(x_sample, n_particles, replace = T, prob = norm_weights)
-    } else {
-      x_resample <- x_sample
-    }
-  } else {
-    resample[1] <- 0
-    w <- norm_weights
-    x_resample <- x_sample
-  }
-
-  samples[2, ] <- x_resample
-  weights[2, ] <- w
-
-  for (i in 2:N) {
+  for (i in 1:N) {
     #sample
     x_sample <- x_resample + extraDistr::rskellam(n_particles, birth_rate * x_resample, death_rate * x_resample)
 
@@ -130,5 +87,5 @@ sir_skellam <- function(n_particles, birth_rate, death_rate, noisy_prevalence, p
   }
 
   return(int_llik)
-  #  return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
+#  return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
 }
