@@ -11,6 +11,11 @@
 #' @examples
 #' genetic_data(ptree = sample_tree, stop_time = 50)
 genetic_data <- function(ptree, stop_time) {
+
+  if (is.null(ptree)) {
+    return(NULL)
+  }
+
   t <- seq(0, stop_time, by=1)
   l <- stop_time + 1 #length of epidemic
 

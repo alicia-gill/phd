@@ -33,13 +33,20 @@ sir_skellam <- function(n_particles, birth_rate, death_rate, noisy_prevalence, p
   x_resample <- samples[1, ]
   w <- weights[1, ]
 
+  length <- length(genetic_data)
+
   for (i in 1:N) {
     #sample
     x_sample <- x_resample + extraDistr::rskellam(n_particles, birth_rate * x_resample, death_rate * x_resample)
 
+    if (length == 0) {
+      gen_llik <- 0
+    } else {
+      gen_llik <- dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * birth_rate / x_sample, log = T)
+    }
+
     #compute weights
-    log_weights <- dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * birth_rate / x_sample, log = T) +
-      dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T)
+    log_weights <- gen_llik + dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T)
 
     log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
     log_weights <- ifelse(is.na(log_weights), -Inf, log_weights)
