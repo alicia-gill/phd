@@ -41,9 +41,16 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
   a <- max(1, noisy_prevalence[2, 2]) - 1
   x_sample <- extraDistr::rtpois(n_particles, lambda = lambda, a = a)
 
+  length <- length(genetic_data)
+  if (length==0) {
+    gen_llik <- 0
+  } else {
+    gen_llik <- dbinom(genetic_data[2, 3], choose(genetic_data[2, 2], 2), 2 * birth_rate / x_sample, log = T)
+  }
+
   #weights
   log_weights <- smc_skellam(x_sample, 1, birth_rate, death_rate, log = T) +
-    dbinom(genetic_data[2, 3], choose(genetic_data[2, 2], 2), 2 * birth_rate / x_sample, log = T) +
+    gen_llik +
     dbinom(noisy_prevalence[2, 2], x_sample, proportion_obs, log = T) -
     extraDistr::dtpois(x_sample, lambda = lambda, a = a, log = T)
 
@@ -89,9 +96,16 @@ sir_adaptive <- function(n_particles, birth_rate, death_rate, noisy_prevalence, 
     a <- max(1, noisy_prevalence[i + 1, 2]) - 1
     x_sample <- extraDistr::rtpois(n_particles, lambda = lambda, a = a)
 
+    length <- length(genetic_data)
+    if (length==0) {
+      gen_llik <- 0
+    } else {
+      gen_llik <- dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * birth_rate / x_sample, log = T)
+    }
+
     #compute weights
     log_weights <- smc_skellam(x_sample, x_resample, birth_rate, death_rate) +
-      dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * birth_rate / x_sample, log = T) +
+      gen_llik +
       dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T) -
       extraDistr::dtpois(x_sample, lambda, a = a, log = T)
 
