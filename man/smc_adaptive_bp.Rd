@@ -8,7 +8,6 @@ smc_adaptive_bp(
   iter,
   birth_rate_0,
   max_birth_rate = 100,
-  prevalence_0,
   proportion_obs_0,
   death_rate,
   ptree,
@@ -26,8 +25,6 @@ smc_adaptive_bp(
 
 \item{max_birth_rate}{maximum value for the birth rate. 100 by default.}
 
-\item{prevalence_0}{data frame of initial values for the prevalence per day.}
-
 \item{proportion_obs_0}{initial value of the proportion of cases observed.}
 
 \item{death_rate}{death rate of the epidemic.}
@@ -43,6 +40,8 @@ smc_adaptive_bp(
 \item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 
 \item{plot}{logical; if TRUE, then plots a trajectory according to weight.}
+
+\item{prevalence_0}{data frame of initial values for the prevalence per day.}
 }
 \value{
 list containing: birth rate, proportion observed, acceptance rate, run time in seconds
@@ -51,5 +50,5 @@ list containing: birth rate, proportion observed, acceptance rate, run time in s
 Implements an SMC-MCMC when the epidemic has been partially observed with unknown proportion.
 }
 \examples{
-smc_adaptive_bp(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, proportion_obs_0 = 0.2, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, n_particles = 100)
+smc_adaptive_bp(iter = 100000, birth_rate_0 = 0.1, proportion_obs_0 = 0.2, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, n_particles = 100)
 }
