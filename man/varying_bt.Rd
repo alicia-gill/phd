@@ -8,7 +8,6 @@ varying_bt(
   iter,
   birth_rate_0,
   max_birth_rate = 100,
-  prevalence_0,
   death_rate,
   ptree,
   noisy_prevalence,
@@ -25,8 +24,6 @@ varying_bt(
 \item{birth_rate_0}{initial value of the vector of birth rates.}
 
 \item{max_birth_rate}{maximum value for the birth rate. 100 by default.}
-
-\item{prevalence_0}{data frame of initial values for the prevalence per day.}
 
 \item{death_rate}{death rate of the epidemic.}
 
@@ -51,5 +48,5 @@ list containing: birth rate, acceptance rate, run time in seconds
 Implements an SMC-MCMC with adaptive resampling when the epidemic with birth rate varying over time has been partially observed with known proportion.
 }
 \examples{
-varying_bt(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
+varying_bt(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
 }

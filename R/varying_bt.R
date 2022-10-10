@@ -5,7 +5,6 @@
 #' @param iter number of iterations to run the algorithm for.
 #' @param birth_rate_0 initial value of the vector of birth rates.
 #' @param max_birth_rate maximum value for the birth rate. 100 by default.
-#' @param prevalence_0 data frame of initial values for the prevalence per day.
 #' @param death_rate death rate of the epidemic.
 #' @param ptree object of class phylo.
 #' @param noisy_prevalence data frame of observed prevalence per day.
@@ -19,8 +18,8 @@
 #' @export
 #'
 #' @examples
-#' varying_bt(iter = 100000, birth_rate_0 = 0.1, prevalence_0 = prev_0, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
-varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, prevalence_0, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold = n_particles/2, print=F, plot=F) {
+#' varying_bt(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
+varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold = n_particles/2, print=F, plot=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(noisy_prevalence)
@@ -30,16 +29,25 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, prevalence_0, d
   n_accepted <- 0
 
   b_old <- birth_rate_0
-  prev_old <- prevalence_0
 
   if (plot == T) {
-    plot(prevalence_0, type="l")
+    plot(NULL, xlim=c(0, stop_time), ylim=c(0,10000), xlab="Day", ylab="Prevalence")
   }
 
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
 
+  #adaptive mh
+  s <- 0
+  X <- b_old
+  mu_old <- X
+  Sigma_old <- diag(1, nrow = stop_time, ncol = stop_time)
+
+  mu <- rep(0, stop_time)
+  Sigma <- matrix(0.03, nrow = stop_time, ncol = stop_time)
+  diag(Sigma) <- 0.1
+
   #prior on b1 is uniform, prior on bt|bt-1 is norm(bt-1, 0.01)
-  prior_old <- sum(dnorm(b_old[2:stop_time], mean = b_old[1:(stop_time-1)], sd = 0.01, log = T))
+  prior_old <- sum(dnorm(b_old[2:stop_time], mean = b_old[1:(stop_time-1)], sd = 0.1, log = T))
   f_hat_old <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
 
   for (i in 1:iter) {
@@ -51,8 +59,11 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, prevalence_0, d
     }
 
     #step 1: sample b_new and sample prev_new
-    eps <- rnorm(stop_time, mean = 0, sd = 0.001)
-    b_new <- b_old + eps
+    w <- MASS::mvrnorm(n = 1, mu = mu, Sigma = Sigma)
+    sqrtSigma <- expm::sqrtm(Sigma_old)
+    Y <- X + exp(s) * sqrtSigma %*% w
+
+    b_new <- Y
     #if proposal is negative or larger than max_birth_rate, then bounce back
     for (k in 1:stop_time) {
       if (b_new[k] < 0) {
@@ -61,13 +72,17 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, prevalence_0, d
     }
 
     #step 2: compute likelihood
-    prior_new <- sum(dnorm(b_new[2:stop_time], mean = b_new[1:(stop_time-1)], sd = 0.01, log = T))
+    prior_new <- sum(dnorm(b_new[2:stop_time], mean = b_new[1:(stop_time-1)], sd = 0.1, log = T))
     f_hat_new <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
 
     #step 3: compute acceptance probability
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
+
+    #adaptive mh
+    eta <- (i + 10)^(-0.6)
+    s <- s + (a - 0.1) * eta
 
     #step 4: accept/reject
     u <- runif(1,0,1)
@@ -78,8 +93,20 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, prevalence_0, d
       f_hat_old <- f_hat_new
     }
     b_matrix[i,] <- b_old
+
+    #adaptive mh
+    X <- b_old
+    mu_new <- (1 - eta) * mu_old + eta * X
+    Sigma_new <- (1 - eta) * Sigma_old + eta * (X - mu_old) %*% t(X - mu_old)
+
+    norm <- norm(mu_new, type="2")
+    evalues <- eigen(Sigma_new)$values
+    if (norm <= 1000 && evalues >= 1/1000 && evalues <= 1000) {
+      mu_old <- mu_new
+      Sigma_old <- Sigma_new
+    }
   }
 
-  output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/iter, "run_time" = as.numeric(Sys.time()) - sys_time)
+  output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/iter, "run_time" = as.numeric(Sys.time()) - sys_time, "sigma"=Sigma_new)
   return(output)
 }
