@@ -27,6 +27,7 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
 
   b_matrix <- matrix(NA, nrow=iter, ncol=stop_time)
   n_accepted <- 0
+  smc_llik <- rep(NA, iter)
 
   b_old <- birth_rate_0
 
@@ -38,13 +39,9 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
 
   #adaptive mh
   s <- 0
-  X <- b_old
-  mu_old <- X
-  Sigma_old <- diag(1, nrow = stop_time, ncol = stop_time)
 
   mu <- rep(0, stop_time)
-  Sigma <- matrix(0.03, nrow = stop_time, ncol = stop_time)
-  diag(Sigma) <- 0.1
+  Sigma <- diag(1, nrow = stop_time, ncol = stop_time)
 
   #prior on b1 is uniform, prior on bt|bt-1 is norm(bt-1, 0.01)
   prior_old <- sum(dnorm(b_old[2:stop_time], mean = b_old[1:(stop_time-1)], sd = 0.1, log = T))
@@ -60,10 +57,9 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
 
     #step 1: sample b_new and sample prev_new
     w <- MASS::mvrnorm(n = 1, mu = mu, Sigma = Sigma)
-    sqrtSigma <- expm::sqrtm(Sigma_old)
-    Y <- X + exp(s) * sqrtSigma %*% w
+    sqrtSigma <- expm::sqrtm(Sigma)
+    b_new <- b_old + exp(s) * sqrtSigma %*% w
 
-    b_new <- Y
     #if proposal is negative or larger than max_birth_rate, then bounce back
     for (k in 1:stop_time) {
       if (b_new[k] < 0) {
@@ -74,6 +70,7 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
     #step 2: compute likelihood
     prior_new <- sum(dnorm(b_new[2:stop_time], mean = b_new[1:(stop_time-1)], sd = 0.1, log = T))
     f_hat_new <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+    smc_llik[i] <- f_hat_new
 
     #step 3: compute acceptance probability
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
@@ -93,20 +90,8 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
       f_hat_old <- f_hat_new
     }
     b_matrix[i,] <- b_old
-
-    #adaptive mh
-    X <- b_old
-    mu_new <- (1 - eta) * mu_old + eta * X
-    Sigma_new <- (1 - eta) * Sigma_old + eta * (X - mu_old) %*% t(X - mu_old)
-
-    norm <- norm(mu_new, type="2")
-    evalues <- eigen(Sigma_new)$values
-    if (norm <= 1000 && evalues >= 1/1000 && evalues <= 1000) {
-      mu_old <- mu_new
-      Sigma_old <- Sigma_new
-    }
   }
 
-  output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/iter, "run_time" = as.numeric(Sys.time()) - sys_time, "sigma"=Sigma_new)
+  output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/iter, "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik"=smc_llik)
   return(output)
 }
