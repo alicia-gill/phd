@@ -11,6 +11,7 @@
 #' @param proportion_obs proportion of cases observed.
 #' @param n_particles number of particles used in the importance sampling.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
+#' @param proposal "poisson" or "skellam".
 #' @param print logical; if TRUE, prints percentage of the way through the chain.
 #' @param plot logical; if TRUE, then plots a trajectory according to weight.
 #'
@@ -18,8 +19,8 @@
 #' @export
 #'
 #' @examples
-#' varying_bt(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
-varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold = n_particles/2, print=F, plot=F) {
+#' varying_bt(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100, proposal = "skellam")
+varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold = n_particles/2, proposal, print=F, plot=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(noisy_prevalence)
@@ -45,7 +46,13 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
 
   #prior on b1 is uniform, prior on bt|bt-1 is norm(bt-1, 0.01)
   prior_old <- sum(dnorm(b_old[2:stop_time], mean = b_old[1:(stop_time-1)], sd = 0.1, log = T))
-  f_hat_old <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
+
+  if (proposal == "skellam") {
+    f_hat_old <- sir_skellam_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
+  }
+  if (proposal == "poisson") {
+    f_hat_old <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
+  }
 
   for (i in 1:iter) {
     if (print == T) {
@@ -69,7 +76,14 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
 
     #step 2: compute likelihood
     prior_new <- sum(dnorm(b_new[2:stop_time], mean = b_new[1:(stop_time-1)], sd = 0.1, log = T))
-    f_hat_new <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+
+    if (proposal == "skellam") {
+      f_hat_new <- sir_skellam_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+    }
+    if (proposal == "poisson") {
+      f_hat_new <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+    }
+
     smc_llik[i] <- f_hat_new
 
     #step 3: compute acceptance probability
