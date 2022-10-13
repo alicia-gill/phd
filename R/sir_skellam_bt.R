@@ -33,20 +33,28 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
   x_resample <- samples[1, ]
   w <- weights[1, ]
 
-  for (i in 1:N) {
+  for (i in 1:14) {
     #sample
     bt <- birth_rate[i]
     a <- max(1, noisy_prevalence[i+1,2])
     x_sample <- rep(NA, n_particles)
-    k <- 1
-    while (k <= n_particles) {
-      xk <- x_resample[k]
-      skel_samp <- xk + extraDistr::rskellam(1, bt*xk, d*xk)
-      if (skel_samp >= a) {
-        x_sample[k] <- skel_samp
-        k <- k + 1
-      } else {
-        next
+
+    set <- which(is.na(x_sample))
+    check <- length(set)
+    count <- 0
+    while (check > 0) {
+      skel_samp <- x_resample[set] + extraDistr::rskellam(check, bt*x_resample[set], d*x_resample[set])
+      for (k in 1:check) {
+        if (skel_samp[k] >= a) {
+          x_sample[set[k]] <- skel_samp[k]
+        }
+      }
+      set <- which(is.na(x_sample))
+      check <- length(set)
+      count <- count + 1
+      if (count > 100000) {
+        int_llik <- -Inf
+        return(int_llik)
       }
     }
 
