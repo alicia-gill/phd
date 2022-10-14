@@ -43,6 +43,7 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
 
   mu <- rep(0, stop_time)
   Sigma <- diag(1, nrow = stop_time, ncol = stop_time)
+  sqrtSigma <- expm::sqrtm(Sigma)
 
   #prior on b1 is uniform, prior on bt|bt-1 is norm(bt-1, 0.01)
   prior_old <- sum(dnorm(b_old[2:stop_time], mean = b_old[1:(stop_time-1)], sd = 0.1, log = T))
@@ -64,7 +65,6 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
 
     #step 1: sample b_new and sample prev_new
     w <- MASS::mvrnorm(n = 1, mu = mu, Sigma = Sigma)
-    sqrtSigma <- expm::sqrtm(Sigma)
     b_new <- b_old + exp(s) * sqrtSigma %*% w
 
     #if proposal is negative or larger than max_birth_rate, then bounce back
