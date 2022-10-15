@@ -35,54 +35,7 @@ sir_adaptive_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalenc
 
   smooth <- smooth(noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs)[-1, 2]
 
-  #day 1
-  #sample
-  lambda <- max(1, smooth[1])
-  a <- max(1, noisy_prevalence[2, 2]) - 1
-  x_sample <- extraDistr::rtpois(n_particles, lambda = lambda, a = a)
-  bt <- birth_rate[1]
-
-  #weights
-  log_weights <- smc_skellam(x_sample, 1, bt, death_rate, log = T) +
-    dbinom(genetic_data[2, 3], choose(genetic_data[2, 2], 2), 2 * bt / x_sample, log = T) +
-    dbinom(noisy_prevalence[2, 2], x_sample, proportion_obs, log = T) -
-    extraDistr::dtpois(x_sample, lambda = lambda, a = a, log = T)
-
-  log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
-
-  #if all impossible, then mission abort
-  if (max(log_weights) == -Inf) {
-    int_llik <- -Inf
-    return(int_llik)
-  }
-
-  #normalise weights
-  lse_weights <- matrixStats::logSumExp(log_weights)
-  mean_weights <- matrixStats::logSumExp(log_weights + log(w))
-  int_llik <- int_llik + mean_weights
-  norm_weights <- exp(log_weights - lse_weights)
-
-  #resampling
-  ess <- 1 / sum(norm_weights^2)
-  particles[2] <- round(ess)
-  if (ess <= ess_threshold) {
-    resample[1] <- 1
-    w <- rep(1/n_particles, n_particles)
-    if (n_particles > 1) {
-      x_resample <- sample(x_sample, n_particles, replace = T, prob = norm_weights)
-    } else {
-      x_resample <- x_sample
-    }
-  } else {
-    resample[1] <- 0
-    w <- norm_weights
-    x_resample <- x_sample
-  }
-
-  samples[2, ] <- x_resample
-  weights[2, ] <- w
-
-  for (i in 2:N) {
+  for (i in 1:N) {
     #sample
     #sample from poisson centred at smooth, or 1 if smooth is 0
     lambda <- max(1, smooth[i])
