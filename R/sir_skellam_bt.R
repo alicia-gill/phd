@@ -36,7 +36,7 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
   for (i in 1:N) {
     #sample
     bt <- birth_rate[i]
-    a <- max(1, noisy_prevalence[i+1,2])
+    a <- max(1, noisy_prevalence[i+1,2], 2*bt)
     x_sample <- rep(NA, n_particles)
 
     set <- which(is.na(x_sample))
