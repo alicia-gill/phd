@@ -33,7 +33,7 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
   x_resample <- samples[1, ]
   w <- weights[1, ]
 
-  for (i in 1:14) {
+  for (i in 1:N) {
     #sample
     bt <- birth_rate[i]
     a <- max(1, noisy_prevalence[i+1,2])
@@ -107,5 +107,5 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
   }
 
   return(int_llik)
-  #  return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
+  #return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
 }
