@@ -48,8 +48,11 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
   #prior on b1 is uniform, prior on bt|bt-1 is norm(bt-1, 0.01)
   prior_old <- sum(dnorm(b_old[2:stop_time], mean = b_old[1:(stop_time-1)], sd = 0.1, log = T))
 
+  particles <- matrix(NA, nrow=stop_time, ncol=iter)
+
   if (proposal == "skellam") {
-    f_hat_old <- sir_skellam_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
+    sir <- sir_skellam_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
+    f_hat_old <- sir$int_llik
   }
   if (proposal == "poisson") {
     f_hat_old <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
@@ -78,7 +81,9 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
     prior_new <- sum(dnorm(b_new[2:stop_time], mean = b_new[1:(stop_time-1)], sd = 0.1, log = T))
 
     if (proposal == "skellam") {
-      f_hat_new <- sir_skellam_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+      sir <- sir_skellam_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+      f_hat_new <- sir$int_llik
+      particles[,i] <- sir$particles
     }
     if (proposal == "poisson") {
       f_hat_new <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
@@ -106,6 +111,6 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
     b_matrix[i,] <- b_old
   }
 
-  output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/iter, "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik"=smc_llik)
+  output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/iter, "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik"=smc_llik, "particles"=particles)
   return(output)
 }
