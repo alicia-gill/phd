@@ -22,7 +22,7 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
   samples <- matrix(nrow = N + 1, ncol = n_particles)
   weights <- matrix(nrow = N + 1, ncol = n_particles)
   resample <- rep(NA, N)
-  particles <- rep(n_particles, N + 1)
+  particles <- rep(NA, N)
   #first day always has 1
   samples[1, ] <- 1
   weights[1, ] <- 1/n_particles
@@ -43,7 +43,7 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
     check <- length(set)
     count <- 0
     while (check > 0) {
-      skel_samp <- x_resample[set] + extraDistr::rskellam(check, bt*x_resample[set], d*x_resample[set])
+      skel_samp <- x_resample[set] + extraDistr::rskellam(check, bt*x_resample[set], death_rate*x_resample[set])
       for (k in 1:check) {
         if (skel_samp[k] >= a) {
           x_sample[set[k]] <- skel_samp[k]
@@ -54,7 +54,8 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
       count <- count + 1
       if (count > 100000) {
         int_llik <- -Inf
-        return(int_llik)
+        #return(int_llik)
+        return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
       }
     }
 
@@ -67,7 +68,8 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
     #if all impossible, then mission abort
     if (max(log_weights) == -Inf) {
       int_llik <- -Inf
-      return(int_llik)
+      #return(int_llik)
+      return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
     }
 
     #normalise weights
@@ -78,7 +80,7 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
 
     #resampling
     ess <- 1 / sum(norm_weights^2)
-    particles[i+1] <- round(ess)
+    particles[i] <- round(ess)
     #if the ess is below threshold, then resample
     if (ess <= ess_threshold) {
       resample[i] <- 1
@@ -106,6 +108,6 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
     lines(sample)
   }
 
-  return(int_llik)
-  #return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
+  #return(int_llik)
+  return(list("int_llik"=int_llik, "resample"=resample, "particles"=particles, "samples"=samples, "weights"=weights))
 }
