@@ -19,6 +19,7 @@
 sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, plot=F) {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1
+  anc <- matrix(nrow = N, ncol = n_particles)
   birth_rate <- matrix(nrow = N, ncol = n_particles)
   prevalence <- matrix(nrow = N + 1, ncol = n_particles)
   weights <- matrix(nrow = N, ncol = n_particles)
@@ -67,6 +68,9 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
       }
     }
 
+    prevalence[i + 1, ] <- x_sample
+    birth_rate[i, ] <- b_sample
+
     #compute weights
     log_weights <- dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * b_sample / x_sample, log = T) +
       dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T)
@@ -95,27 +99,27 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
       w <- rep(1/n_particles, n_particles)
       #if n_particles==1, then sample() is weird
       index <- sample(1:n_particles, n_particles, replace = T, prob = norm_weights)
+      anc[i,] <- index
       x_resample <- x_sample[index]
       b_resample <- b_sample[index]
     } else {
       resample[i] <- 0
       w <- norm_weights
+      anc[i,] <- 1:n_particles
       x_resample <- x_sample
       b_resample <- b_sample
     }
 
-    prevalence[i + 1, ] <- x_resample
-    birth_rate[i, ] <- b_resample
     weights[i, ] <- w
   }
 
   #if plot==T, sample one trajectory according to final weight
   if (plot == T) {
     j <- sample(1:n_particles, 1, prob=norm_weights)
-    sample <- samples[,j]
-    lines(sample)
+    prevalence <- prevalence[,j]
+    lines(prevalence)
   }
 
   #return(int_llik)
-  return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights))
+  return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights, "ancestors"=anc))
 }
