@@ -64,7 +64,7 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
       if (count > 10000000) {
         int_llik <- -Inf
         #return(int_llik)
-        return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights))
+        return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights, "ancestors"=anc))
       }
     }
 
@@ -81,7 +81,7 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
     if (max(log_weights) == -Inf) {
       int_llik <- -Inf
       #return(int_llik)
-      return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights))
+      return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights, "ancestors"=anc))
     }
 
     #normalise weights
