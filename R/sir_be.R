@@ -97,7 +97,6 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
     if (ess <= ess_threshold) {
       resample[i] <- 1
       w <- rep(1/n_particles, n_particles)
-      #if n_particles==1, then sample() is weird
       index <- sample(1:n_particles, n_particles, replace = T, prob = norm_weights)
       anc[i,] <- index
       x_resample <- x_sample[index]
