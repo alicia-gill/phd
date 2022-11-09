@@ -58,8 +58,8 @@ sir_skellam_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence
       set <- which(is.na(x_sample))
       check <- length(set)
       count <- count + 1
-      #if this loop is run more than 1,000,000 times, then consider this birth rate trajectory impossible
-      if (count > 1000000) {
+      #if this loop is run more than 100,000 times, then consider this birth rate trajectory impossible
+      if (count > 100000) {
         int_llik <- -Inf
         prevalence[i + 1, ] <- x_sample
         #return(int_llik)
