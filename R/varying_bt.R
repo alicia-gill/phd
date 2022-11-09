@@ -83,7 +83,7 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
     if (proposal == "skellam") {
       sir <- sir_skellam_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
       f_hat_new <- sir$int_llik
-      particles[i,] <- sir$particles
+      particles[i,] <- sir$ess
     }
     if (proposal == "poisson") {
       f_hat_new <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
