@@ -23,6 +23,11 @@
 varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold = n_particles/2, proposal, print=F, plot=F) {
   sys_time <- as.numeric(Sys.time())
 
+  if ((proposal != "poisson") && (proposal != "skellam") && (proposal != "binomial")) {
+    print("proposal should be poisson, skellam or binomial")
+    stop()
+  }
+
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
 
@@ -57,6 +62,10 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
   if (proposal == "poisson") {
     f_hat_old <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
   }
+  if (proposal == "binomial") {
+    sir <- sir_bin_bt(n_particles = n_particles, birth_rate = b_old, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold)
+    f_hat_old <- sir$int_llik
+  }
 
   for (i in 1:iter) {
     if (print == T) {
@@ -71,11 +80,7 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
     b_new <- b_old + exp(s) * sqrtSigma %*% w
 
     #if proposal is negative or larger than max_birth_rate, then bounce back
-    for (k in 1:stop_time) {
-      if (b_new[k] < 0) {
-        b_new[k] <- -b_new[k]
-      }
-    }
+    b_new <- abs(b_new)
 
     #step 2: compute likelihood
     prior_new <- sum(dnorm(b_new[2:stop_time], mean = b_new[1:(stop_time-1)], sd = 0.1, log = T))
@@ -87,6 +92,11 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
     }
     if (proposal == "poisson") {
       f_hat_new <- sir_adaptive_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+    }
+    if (proposal == "binomial") {
+      sir <- sir_bin_bt(n_particles = n_particles, birth_rate = b_new, death_rate = death_rate, proportion_obs = proportion_obs, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, ess_threshold = ess_threshold, plot = plot)
+      f_hat_new <- sir$int_llik
+      particles[i,] <- sir$ess
     }
 
     smc_llik[i] <- f_hat_new
