@@ -128,6 +128,6 @@ varying_bt <- function(iter, max_time=Inf, birth_rate_0, max_birth_rate = 100, d
     run_time <- as.numeric(Sys.time()) - sys_time
   }
 
-  output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/iter, "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik"=smc_llik, "particles"=particles)
+  output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/(i-1), "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik"=smc_llik, "particles"=particles)
   return(output)
 }
