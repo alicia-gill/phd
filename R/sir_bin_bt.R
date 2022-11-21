@@ -41,7 +41,13 @@ sir_bin_bt <- function(n_particles, birth_rate, death_rate, noisy_prevalence, pr
 
     bt <- birth_rate[i]
     #compute weights
-    log_weights <- smc_skellam(x_sample, x_resample, bt, death_rate) + dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * bt / x_sample, log = T) +
+    if (is.null(genetic_data)==1) {
+      genetic_llik <- 0
+    } else {
+      genetic_llik <- dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * bt / x_sample, log = T)
+    }
+
+    log_weights <- smc_skellam(x_sample, x_resample, bt, death_rate) + genetic_llik +
       dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T) - dnbinom(x_sample - noisy_prevalence[i + 1, 2], noisy_prevalence[i+1,2]+1, proportion_obs, log=T)
 
     log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
