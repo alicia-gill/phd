@@ -3,6 +3,7 @@
 #' Implements an SMC-MCMC with adaptive resampling when the epidemic with birth rate varying over time has been partially observed with known proportion.
 #'
 #' @param iter number of iterations to run the algorithm for.
+#' @param max_time maximum number of seconds to run the algorithm for.
 #' @param birth_rate_0 initial value of the vector of birth rates.
 #' @param max_birth_rate maximum value for the birth rate. 100 by default.
 #' @param death_rate death rate of the epidemic.
@@ -20,7 +21,7 @@
 #'
 #' @examples
 #' varying_bt(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100, proposal = "skellam")
-varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold = n_particles/2, proposal, print=F, plot=F) {
+varying_bt <- function(iter, max_time=Inf, birth_rate_0, max_birth_rate = 100, death_rate, ptree, noisy_prevalence, proportion_obs, n_particles, ess_threshold = n_particles/2, proposal, print=F, plot=F) {
   sys_time <- as.numeric(Sys.time())
 
   if ((proposal != "poisson") && (proposal != "skellam") && (proposal != "binomial")) {
@@ -67,7 +68,10 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
     f_hat_old <- sir$int_llik
   }
 
-  for (i in 1:iter) {
+  i <- 1
+  run_time <- as.numeric(Sys.time()) - sys_time
+
+  while (i <= iter & run_time <= max_time) {
     if (print == T) {
       j <- 100*i/iter
       if (j %% 1 == 0) {
@@ -119,6 +123,9 @@ varying_bt <- function(iter, birth_rate_0, max_birth_rate = 100, death_rate, ptr
       f_hat_old <- f_hat_new
     }
     b_matrix[i,] <- b_old
+
+    i <- i + 1
+    run_time <- as.numeric(Sys.time()) - sys_time
   }
 
   output <- list("birth_rate" = b_matrix, "acceptance_rate" = n_accepted/iter, "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik"=smc_llik, "particles"=particles)

@@ -6,6 +6,7 @@
 \usage{
 varying_bt(
   iter,
+  max_time = Inf,
   birth_rate_0,
   max_birth_rate = 100,
   death_rate,
@@ -21,6 +22,8 @@ varying_bt(
 }
 \arguments{
 \item{iter}{number of iterations to run the algorithm for.}
+
+\item{max_time}{maximum number of seconds to run the algorithm for.}
 
 \item{birth_rate_0}{initial value of the vector of birth rates.}
 
