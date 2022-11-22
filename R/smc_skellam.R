@@ -15,9 +15,20 @@
 #' smc_skellam(new_x = 10, old_x = 7, birth_rate = 0.2, death_rate = 0.1)
 smc_skellam <- function(new_x, old_x, birth_rate, death_rate, log=T) {
 
+  nu <- abs(new_x - old_x)
+  length <- length(nu)
+  logI <- rep(NA, length)
+  set0 <- (1:length)[nu == 0]
+  set1 <- (1:length)[nu > 0]
+
+  #if nu=0, then use normal besselI
+  logI[set0] <- log(besselI(x = 2 * old_x[set0] * sqrt(birth_rate * death_rate), nu = nu[set0], expon.scaled = T))
+  #if nu>0, then use asymptotic besselI
+  logI[set1] <- Bessel::besselI.nuAsym(x = 2 * old_x[set1] * sqrt(birth_rate * death_rate), nu = nu[set1], k.max = 5, expon.scaled = T, log = T)
+
   logl <- ((new_x - old_x)/2 * (log(birth_rate) - log(death_rate))) -
           (old_x * (birth_rate + death_rate)) +
-          log(besselI(x = 2 * old_x * sqrt(birth_rate * death_rate), nu = abs(new_x - old_x), expon.scaled = T)) +
+          logI +
           (2 * old_x * sqrt(birth_rate * death_rate))
 
   if (log==T) {
