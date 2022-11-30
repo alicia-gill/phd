@@ -1,37 +1,44 @@
 #' Sample Importance Resample - Adaptive
 #'
-#' Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Proposals are Skellam.
+#' Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Prevalence proposals are negative binomial and birth rate proposals are linear Gaussian.
 #'
 #' @param n_particles number of particles used in the sampling.
 #' @param birth_rate_max maximum value of the birth rate on day 1 of the epidemic.
+#' @param sigma standard deviation of the linear gaussian proposal for birth rates.
 #' @param death_rate death rate of the epidemic.
 #' @param noisy_prevalence data frame of observed prevalence per day.
 #' @param proportion_obs proportion of cases observed.
 #' @param genetic_data data frame of day, number of lineages and number of coalescences.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
-#' @param plot logical; if TRUE, then plots a prevalence trajectory according to weight.
 #'
 #' @return log-likelihood
 #' @export
 #'
 #' @examples
-#' sir_be(n_particles = 100, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
-sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, plot=F) {
+#' sir_be(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
+sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2) {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1
+  #ancestor matrix
   anc <- matrix(nrow = N, ncol = n_particles)
+  #birth rate matrix
   birth_rate <- matrix(nrow = N, ncol = n_particles)
+  #prevalence matrix: (N+1) rows to include 1 case on day 0
   prevalence <- matrix(nrow = N + 1, ncol = n_particles)
+  #particle weights
   weights <- matrix(nrow = N, ncol = n_particles)
+  #resample indicator
   resample <- rep(NA, N)
+  #ess
   particles <- rep(NA, N)
-  #first day always has 1
+  #zeroth day always has 1
   prevalence[1, ] <- 1
 
   #initialise smc likelihood approximation
   int_llik <- 0
   #initialise x_resample to be 1
   x_resample <- prevalence[1, ]
+  #initial weights are equal
   w <- 1/n_particles
 
   for (i in 1:N) {
@@ -39,41 +46,26 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
     if (i == 1) {
       b_sample <- runif(n_particles, min=0, max=max_birth_rate)
     } else {
-      b_sample <- rnorm(n_particles, mean = b_resample, sd = 0.1)
+      b_sample <- rnorm(n_particles, mean = b_resample, sd = sigma)
       #reflect off 0
       b_sample <- abs(b_sample)
     }
 
     #sample x
-    a <- pmax(1, noisy_prevalence[i+1,2], 2*b_sample)
-    x_sample <- rep(NA, n_particles)
-
-    set <- which(is.na(x_sample))
-    check <- length(set)
-    count <- 0
-    while (check > 0) {
-      skel_samp <- x_resample[set] + extraDistr::rskellam(check, b_sample[set]*x_resample[set], death_rate*x_resample[set])
-      for (k in 1:check) {
-        if (skel_samp[k] >= a[set[k]]) {
-          x_sample[set[k]] <- skel_samp[k]
-        }
-      }
-      set <- which(is.na(x_sample))
-      check <- length(set)
-      count <- count + 1
-      if (count > 10000000) {
-        int_llik <- -Inf
-        #return(int_llik)
-        return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights, "ancestors"=anc))
-      }
-    }
+    x_sample <- noisy_prevalence[i + 1, 2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2] + 1, p = proportion_obs)
 
     prevalence[i + 1, ] <- x_sample
     birth_rate[i, ] <- b_sample
 
     #compute weights
-    log_weights <- dbinom(genetic_data[i + 1, 3], choose(genetic_data[i + 1, 2], 2), 2 * b_sample / x_sample, log = T) +
-      dbinom(noisy_prevalence[i + 1, 2], x_sample, proportion_obs, log = T)
+    if (is.null(genetic_data)==1) {
+      genetic_llik <- 0
+    } else {
+      genetic_llik <- dbinom(x = genetic_data[i + 1, 3], size = choose(genetic_data[i + 1, 2], 2), prob = 2 * b_sample / x_sample, log = T)
+    }
+
+    log_weights <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) + genetic_llik +
+      dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T) - dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2] + 1, prob = proportion_obs, log=T)
 
     log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
 
@@ -81,7 +73,7 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
     if (max(log_weights) == -Inf) {
       int_llik <- -Inf
       #return(int_llik)
-      return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights, "ancestors"=anc))
+      return(list("int_llik"=int_llik, "birth_rate"=rep(NA,N), "prevalence"=data.frame("day"=0:N, "prev"=c(1, rep(NA, N)))))
     }
 
     #normalise weights
@@ -92,7 +84,7 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
 
     #resampling
     ess <- 1 / sum(norm_weights^2)
-    particles[i] <- round(ess)
+    particles[i] <- ess
     #if the ess is below threshold, then resample
     if (ess <= ess_threshold) {
       resample[i] <- 1
@@ -112,13 +104,14 @@ sir_be <- function(n_particles, max_birth_rate = 10, death_rate, noisy_prevalenc
     weights[i, ] <- w
   }
 
-  #if plot==T, sample one trajectory according to final weight
-  if (plot == T) {
-    j <- sample(1:n_particles, 1, prob=norm_weights)
-    prevalence <- prevalence[,j]
-    lines(prevalence)
+  j <- sample(1:n_particles, 1, prob=weights[N,])
+  a <- anc[,j]
+  b <- rep(NA, N)
+  p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
+  for (i in 1:N) {
+    b[i] <- birth_rate[i,a[i]]
+    p[i+1,2] <- prevalence[i+1, a[i]]
   }
 
-  #return(int_llik)
-  return(list("int_llik"=int_llik, "resample_count"=resample, "particles"=particles, "birth_rate"=birth_rate, "prevalence"=prevalence, "weights"=weights, "ancestors"=anc))
+  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p))
 }

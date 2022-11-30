@@ -6,17 +6,19 @@
 \usage{
 sir_be(
   n_particles,
-  max_birth_rate = 10,
+  max_birth_rate,
+  sigma,
   death_rate,
   noisy_prevalence,
   proportion_obs,
   genetic_data,
-  ess_threshold = n_particles/2,
-  plot = F
+  ess_threshold = n_particles/2
 )
 }
 \arguments{
 \item{n_particles}{number of particles used in the sampling.}
+
+\item{sigma}{standard deviation of the linear gaussian proposal for birth rates.}
 
 \item{death_rate}{death rate of the epidemic.}
 
@@ -28,16 +30,14 @@ sir_be(
 
 \item{ess_threshold}{threshold of ESS below which triggers resampling.}
 
-\item{plot}{logical; if TRUE, then plots a prevalence trajectory according to weight.}
-
 \item{birth_rate_max}{maximum value of the birth rate on day 1 of the epidemic.}
 }
 \value{
 log-likelihood
 }
 \description{
-Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Proposals are Skellam.
+Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Prevalence proposals are negative binomial and birth rate proposals are linear Gaussian.
 }
 \examples{
-sir_be(n_particles = 100, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
+sir_be(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
 }
