@@ -8,7 +8,7 @@ varying_bt(
   iter,
   max_time = Inf,
   birth_rate_0,
-  max_birth_rate = 100,
+  max_birth_rate = 1,
   death_rate,
   ptree,
   noisy_prevalence,
