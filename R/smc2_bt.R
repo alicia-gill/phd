@@ -14,7 +14,7 @@
 #' @param ess_threshold threshold of ESS below which triggers resampling.
 #' @param print logical; if TRUE, prints percentage of the way through the chain.
 #'
-#' @return list containing: birth rate, prevalence, acceptance rate, run time in seconds
+#' @return list containing: birth rate, prevalence, proportion observed, maximum birth rate, linear gaussian variance, acceptance rate, run time in seconds and smc log-likelihood
 #' @export
 #'
 #' @examples
