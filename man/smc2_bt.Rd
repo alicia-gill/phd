@@ -9,6 +9,7 @@ smc2_bt(
   max_time = Inf,
   max_birth_rate0,
   sigma0,
+  proportion_obs0,
   death_rate,
   ptree,
   noisy_prevalence,
@@ -25,15 +26,15 @@ smc2_bt(
 
 \item{max_birth_rate0}{initial value of the maximum birth rate.}
 
-\item{sigma0}{intital value of the linear gaussian standard deviation.}
+\item{sigma0}{initial value of the linear gaussian standard deviation.}
+
+\item{proportion_obs0}{initial value of the proportion of cases observed.}
 
 \item{death_rate}{death rate of the epidemic.}
 
 \item{ptree}{object of class phylo.}
 
 \item{noisy_prevalence}{data frame of observed prevalence per day.}
-
-\item{proportion_obs}{proportion of cases observed.}
 
 \item{n_particles}{number of particles used in the importance sampling.}
 
