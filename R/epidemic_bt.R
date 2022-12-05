@@ -67,7 +67,7 @@ epidemic_bt <- function(birth_rate_fn, death_rate, stop_time) {
       data$status[i] <- "R"
       data$rem_time[i] <- current_time
       n_inf <- n_inf - 1
-      inf <- inf[!inf==i] #remove i from inf
+      inf <- subset(inf, inf != i) #remove i from inf
     }
   }
 
