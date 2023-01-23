@@ -10,13 +10,14 @@
 #' @param proportion_obs proportion of cases observed.
 #' @param genetic_data data frame of day, number of lineages and number of coalescences.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
+#' @param resampling_scheme "multinomial" or "systematic".
 #'
 #' @return log-likelihood
 #' @export
 #'
 #' @examples
 #' sir_be(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
-sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2) {
+sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, resampling_scheme = "multinomial") {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1
   #ancestor matrix
@@ -89,7 +90,16 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     if (ess <= ess_threshold) {
       resample[i] <- 1
       w <- rep(1/n_particles, n_particles)
-      index <- sample(1:n_particles, n_particles, replace = T, prob = norm_weights)
+      if (resampling_scheme != "multinomial" & resampling_scheme != "systematic") {
+        print("resampling scheme must be multinomial or systematic")
+        break
+      }
+      if (resampling_scheme == "multinomial") {
+        index <- sample(1:n_particles, n_particles, replace = T, prob = norm_weights)
+      }
+      if (resampling_scheme == "systematic") {
+        index <- systematic_sample(n_particles, norm_weights)
+      }
       anc[i,] <- index
       x_resample <- x_sample[index]
       b_resample <- b_sample[index]

@@ -12,6 +12,7 @@
 #' @param noisy_prevalence data frame of observed prevalence per day.
 #' @param n_particles number of particles used in the importance sampling.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
+#' @param resampling_scheme "multinomial" or "systematic".
 #' @param print logical; if TRUE, prints percentage of the way through the chain.
 #'
 #' @return list containing: birth rate, prevalence, proportion observed, maximum birth rate, linear gaussian variance, acceptance rate, run time in seconds and smc log-likelihood
@@ -19,7 +20,7 @@
 #'
 #' @examples
 #' smc2_bt(iter = 100000, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100)
-smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0, death_rate, ptree, noisy_prevalence, n_particles, ess_threshold = n_particles/2, print=F) {
+smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0, death_rate, ptree, noisy_prevalence, n_particles, ess_threshold = n_particles/2, resampling_scheme = "multinomial", print=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(noisy_prevalence)
