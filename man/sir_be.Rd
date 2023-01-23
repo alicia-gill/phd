@@ -12,7 +12,8 @@ sir_be(
   noisy_prevalence,
   proportion_obs,
   genetic_data,
-  ess_threshold = n_particles/2
+  ess_threshold = n_particles/2,
+  resampling_scheme = "multinomial"
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ sir_be(
 \item{genetic_data}{data frame of day, number of lineages and number of coalescences.}
 
 \item{ess_threshold}{threshold of ESS below which triggers resampling.}
+
+\item{resampling_scheme}{"multinomial" or "systematic".}
 
 \item{birth_rate_max}{maximum value of the birth rate on day 1 of the epidemic.}
 }

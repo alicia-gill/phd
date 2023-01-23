@@ -114,13 +114,33 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     weights[i, ] <- w
   }
 
-  j <- sample(1:n_particles, 1, prob=weights[N,])
-  a <- anc[,j]
+  # j <- sample(1:n_particles, 1, prob=weights[N,])
+  # a <- anc[,j]
+  # b <- rep(NA, N)
+  # p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
+  # for (i in 1:N) {
+  #   b[i] <- birth_rate[i,a[i]]
+  #   p[i+1,2] <- prevalence[i+1, a[i]]
+  # }
+
+  jt <- rep(NA, 30)
+  #day 30
+  jt[N] <- sample(1:n_particles, 1, prob=weights[N,])
+  for (t in (N-1):1) {
+    wtT <- rep(NA, n_particles)
+    x <- birth_rate[t+1, jt[t+1]]
+    sum <- log(sum(weights[t,]*dnorm(x, mean = birth_rate[t,], sd = sigma)))
+    for (m in 1:n_particles) {
+      wtT[m] <- log(weights[t,m]) + dnorm(x, mean = birth_rate[t,m], sd = sigma, log = T) - sum
+    }
+    jt[t] <- sample(1:n_particles, 1, prob = exp(wtT))
+  }
+
   b <- rep(NA, N)
   p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
   for (i in 1:N) {
-    b[i] <- birth_rate[i,a[i]]
-    p[i+1,2] <- prevalence[i+1, a[i]]
+    b[i] <- birth_rate[i,jt[i]]
+    p[i+1,2] <- prevalence[i+1, jt[i]]
   }
 
   return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p))
