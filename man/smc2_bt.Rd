@@ -13,7 +13,6 @@ smc2_bt(
   death_rate,
   ptree,
   noisy_prevalence,
-  proportion_obs,
   n_particles,
   ess_threshold = n_particles/2,
   print = F
@@ -43,7 +42,7 @@ smc2_bt(
 \item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 }
 \value{
-list containing: birth rate, prevalence, acceptance rate, run time in seconds
+list containing: birth rate, prevalence, proportion observed, maximum birth rate, linear gaussian variance, acceptance rate, run time in seconds and smc log-likelihood
 }
 \description{
 Implements an SMC-MCMC with adaptive resampling when the epidemic with birth rate varying over time has been partially observed with known proportion.

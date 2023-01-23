@@ -7,17 +7,16 @@
 varying_bt(
   iter,
   max_time = Inf,
-  birth_rate_0,
-  max_birth_rate = 1,
+  birth_rate0,
+  max_birth_rate0,
+  sigma0,
+  proportion_obs0,
   death_rate,
   ptree,
   noisy_prevalence,
-  proportion_obs,
   n_particles,
   ess_threshold = n_particles/2,
-  proposal,
-  print = F,
-  plot = F
+  print = F
 )
 }
 \arguments{
@@ -25,9 +24,13 @@ varying_bt(
 
 \item{max_time}{maximum number of seconds to run the algorithm for.}
 
-\item{birth_rate_0}{initial value of the vector of birth rates.}
+\item{birth_rate0}{initial value of the vector of birth rates.}
 
-\item{max_birth_rate}{maximum value for the birth rate. 100 by default.}
+\item{max_birth_rate0}{initial value of the maximum birth rate.}
+
+\item{sigma0}{initial value of the linear Gaussian standard deviation.}
+
+\item{proportion_obs0}{initial value of the proportion of cases observed.}
 
 \item{death_rate}{death rate of the epidemic.}
 
@@ -35,24 +38,18 @@ varying_bt(
 
 \item{noisy_prevalence}{data frame of observed prevalence per day.}
 
-\item{proportion_obs}{proportion of cases observed.}
-
 \item{n_particles}{number of particles used in the importance sampling.}
 
 \item{ess_threshold}{threshold of ESS below which triggers resampling.}
 
-\item{proposal}{"poisson" or "skellam".}
-
 \item{print}{logical; if TRUE, prints percentage of the way through the chain.}
-
-\item{plot}{logical; if TRUE, then plots a trajectory according to weight.}
 }
 \value{
-list containing: birth rate, acceptance rate, run time in seconds
+list containing: birth rate, proportion observed, maximum birth rate, linear gaussian variance, acceptance rate, run time in seconds and smc log-likelihood
 }
 \description{
 Implements an SMC-MCMC with adaptive resampling when the epidemic with birth rate varying over time has been partially observed with known proportion.
 }
 \examples{
-varying_bt(iter = 100000, birth_rate_0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, proportion_obs = 0.2, n_particles = 100, proposal = "skellam")
+varying_bt(iter = 100000, birth_rate_0 = rep(0.1, 50), max_birth_rate0 = 1, sigma0 = 0.1, proportion_obs0 = 0.1, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, n_particles = 100)
 }
