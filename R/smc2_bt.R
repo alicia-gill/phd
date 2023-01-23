@@ -45,7 +45,7 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
   sigma_old <- sigma0
   p_obs_old <- proportion_obs0
 
-  sir <- sir_be(n_particles = n_particles, max_birth_rate = max_b_old, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold)
+  sir <- sir_be(n_particles = n_particles, max_birth_rate = max_b_old, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme)
   f_hat_old <- sir$int_llik
   b_old <- sir$birth_rate
   p_old <- sir$prevalence[,2]
@@ -83,7 +83,7 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
     }
 
     #step 2: compute likelihood
-    sir <- sir_be(n_particles = n_particles, max_birth_rate = max_b_new, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold)
+    sir <- sir_be(n_particles = n_particles, max_birth_rate = max_b_new, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme)
     f_hat_new <- sir$int_llik
     b_new <- sir$birth_rate
     p_new <- sir$prevalence[,2]

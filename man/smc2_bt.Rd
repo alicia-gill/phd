@@ -15,6 +15,7 @@ smc2_bt(
   noisy_prevalence,
   n_particles,
   ess_threshold = n_particles/2,
+  resampling_scheme = "multinomial",
   print = F
 )
 }
@@ -38,6 +39,8 @@ smc2_bt(
 \item{n_particles}{number of particles used in the importance sampling.}
 
 \item{ess_threshold}{threshold of ESS below which triggers resampling.}
+
+\item{resampling_scheme}{"multinomial" or "systematic".}
 
 \item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 }
