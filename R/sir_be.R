@@ -123,15 +123,17 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
   #   p[i+1,2] <- prevalence[i+1, a[i]]
   # }
 
+  log_norm_weights <- log(weights)
   jt <- rep(NA, 30)
   #day 30
   jt[N] <- sample(1:n_particles, 1, prob=weights[N,])
   for (t in (N-1):1) {
     wtT <- rep(NA, n_particles)
     x <- birth_rate[t+1, jt[t+1]]
-    sum <- log(sum(weights[t,]*dnorm(x, mean = birth_rate[t,], sd = sigma)))
+    y <- prevalence[t+2, jt[t+1]]
+    log_sum <- matrixStats::logSumExp(log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate))
     for (m in 1:n_particles) {
-      wtT[m] <- log(weights[t,m]) + dnorm(x, mean = birth_rate[t,m], sd = sigma, log = T) - sum
+      wtT[m] <- log_norm_weights[t,m] + dnorm(x, mean = birth_rate[t,m], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1, m], birth_rate = x, death_rate = death_rate) - log_sum
     }
     jt[t] <- sample(1:n_particles, 1, prob = exp(wtT))
   }
