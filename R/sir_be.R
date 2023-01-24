@@ -53,7 +53,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     }
 
     #sample x
-    x_sample <- noisy_prevalence[i + 1, 2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2] + 1, p = proportion_obs)
+    x_sample <- 1 + noisy_prevalence[i + 1, 2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2] + 1, p = proportion_obs)
 
     prevalence[i + 1, ] <- x_sample
     birth_rate[i, ] <- b_sample
@@ -66,7 +66,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     }
 
     log_weights <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) + genetic_llik +
-      dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T) - dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2] + 1, prob = proportion_obs, log=T)
+      dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T) - dnbinom(x = x_sample - noisy_prevalence[i + 1, 2] - 1, size = noisy_prevalence[i + 1, 2] + 1, prob = proportion_obs, log=T)
 
     log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
 
@@ -128,13 +128,10 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
   #day 30
   jt[N] <- sample(1:n_particles, 1, prob=weights[N,])
   for (t in (N-1):1) {
-    wtT <- rep(NA, n_particles)
     x <- birth_rate[t+1, jt[t+1]]
     y <- prevalence[t+2, jt[t+1]]
     log_sum <- matrixStats::logSumExp(log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate))
-    for (m in 1:n_particles) {
-      wtT[m] <- log_norm_weights[t,m] + dnorm(x, mean = birth_rate[t,m], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1, m], birth_rate = x, death_rate = death_rate) - log_sum
-    }
+    wtT <- log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate) - log_sum
     jt[t] <- sample(1:n_particles, 1, prob = exp(wtT))
   }
 
