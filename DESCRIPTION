@@ -20,4 +20,8 @@ Imports:
     matrixStats,
     nimble,
     nimbleSMC,
-    parallel
+    parallel,
+    Rcpp
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo
