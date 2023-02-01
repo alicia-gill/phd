@@ -16,6 +16,7 @@ smc2_bt(
   n_particles,
   ess_threshold = n_particles/2,
   resampling_scheme = "multinomial",
+  backward_sim = TRUE,
   print = F
 )
 }
@@ -41,6 +42,8 @@ smc2_bt(
 \item{ess_threshold}{threshold of ESS below which triggers resampling.}
 
 \item{resampling_scheme}{"multinomial" or "systematic".}
+
+\item{backward_sim}{logical; if TRUE, uses backward simulation.}
 
 \item{print}{logical; if TRUE, prints percentage of the way through the chain.}
 }
