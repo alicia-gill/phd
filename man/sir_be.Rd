@@ -13,7 +13,8 @@ sir_be(
   proportion_obs,
   genetic_data,
   ess_threshold = n_particles/2,
-  resampling_scheme = "multinomial"
+  resampling_scheme = "multinomial",
+  backward_sim = TRUE
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ sir_be(
 \item{ess_threshold}{threshold of ESS below which triggers resampling.}
 
 \item{resampling_scheme}{"multinomial" or "systematic".}
+
+\item{backward_sim}{logical; if TRUE, uses backward simulation.}
 
 \item{birth_rate_max}{maximum value of the birth rate on day 1 of the epidemic.}
 }

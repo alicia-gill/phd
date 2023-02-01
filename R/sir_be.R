@@ -11,13 +11,14 @@
 #' @param genetic_data data frame of day, number of lineages and number of coalescences.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
 #' @param resampling_scheme "multinomial" or "systematic".
+#' @param backward_sim logical; if TRUE, uses backward simulation.
 #'
 #' @return log-likelihood
 #' @export
 #'
 #' @examples
 #' sir_be(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
-sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, resampling_scheme = "multinomial") {
+sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, resampling_scheme = "multinomial", backward_sim = TRUE) {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1
   #ancestor matrix
@@ -62,7 +63,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     if (is.null(genetic_data)==1) {
       genetic_llik <- 0
     } else {
-      genetic_llik <- dbinom(x = genetic_data[i + 1, 3], size = choose(genetic_data[i + 1, 2], 2), prob = 2 * b_sample / x_sample, log = T)
+      genetic_llik <- dbinom(x = genetic_data[i + 1, 3], size = choose(genetic_data[i + 1, 2], 2), prob = 1 - exp( - 2 * b_sample / x_sample), log = T)
     }
 
     log_weights <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) + genetic_llik +
@@ -98,7 +99,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
         index <- sample(1:n_particles, n_particles, replace = T, prob = norm_weights)
       }
       if (resampling_scheme == "systematic") {
-        index <- systematic_sample(n_particles, norm_weights)
+        index <- systematic_sample_cpp(n_particles, norm_weights)
       }
       anc[i,] <- index
       x_resample <- x_sample[index]
@@ -114,32 +115,31 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     weights[i, ] <- w
   }
 
-  # j <- sample(1:n_particles, 1, prob=weights[N,])
-  # a <- anc[,j]
-  # b <- rep(NA, N)
-  # p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
-  # for (i in 1:N) {
-  #   b[i] <- birth_rate[i,a[i]]
-  #   p[i+1,2] <- prevalence[i+1, a[i]]
-  # }
-
-  log_norm_weights <- log(weights)
-  jt <- rep(NA, 30)
-  #day 30
-  jt[N] <- sample(1:n_particles, 1, prob=weights[N,])
-  for (t in (N-1):1) {
-    x <- birth_rate[t+1, jt[t+1]]
-    y <- prevalence[t+2, jt[t+1]]
-    log_sum <- matrixStats::logSumExp(log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate))
-    wtT <- log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate) - log_sum
-    jt[t] <- sample(1:n_particles, 1, prob = exp(wtT))
-  }
-
   b <- rep(NA, N)
   p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
-  for (i in 1:N) {
-    b[i] <- birth_rate[i,jt[i]]
-    p[i+1,2] <- prevalence[i+1, jt[i]]
+  if (backward_sim == TRUE) {
+    log_norm_weights <- log(weights)
+    jt <- rep(NA, 30)
+    #day 30
+    jt[N] <- sample(1:n_particles, 1, prob=weights[N,])
+    for (t in (N-1):1) {
+      x <- birth_rate[t+1, jt[t+1]]
+      y <- prevalence[t+2, jt[t+1]]
+      log_sum <- matrixStats::logSumExp(log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate))
+      wtT <- log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate) - log_sum
+      jt[t] <- sample(1:n_particles, 1, prob = exp(wtT))
+    }
+    for (i in 1:N) {
+      b[i] <- birth_rate[i,jt[i]]
+      p[i+1,2] <- prevalence[i+1, jt[i]]
+    }
+  } else {
+    j <- sample(1:n_particles, 1, prob=weights[N,])
+    a <- anc[,j]
+    for (i in 1:N) {
+      b[i] <- birth_rate[i,a[i]]
+      p[i+1,2] <- prevalence[i+1, a[i]]
+    }
   }
 
   return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p))
