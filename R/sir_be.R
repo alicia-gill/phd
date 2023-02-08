@@ -54,7 +54,13 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     }
 
     #sample x
-    x_sample <- 1 + noisy_prevalence[i + 1, 2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2] + 1, p = proportion_obs)
+    if (noisy_prevalence[i+1,2] == 0) {
+      x_sample <- x_resample + rtskellam(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate)
+      epi_llik <- 0
+    } else {
+      x_sample <- noisy_prevalence[i + 1, 2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
+      epi_llik <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) - dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log=T)
+    }
 
     prevalence[i + 1, ] <- x_sample
     birth_rate[i, ] <- b_sample
@@ -66,10 +72,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
       genetic_llik <- dbinom(x = genetic_data[i + 1, 3], size = choose(genetic_data[i + 1, 2], 2), prob = 1 - exp( - 2 * b_sample / x_sample), log = T)
     }
 
-    log_weights <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) + genetic_llik +
-      dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T) - dnbinom(x = x_sample - noisy_prevalence[i + 1, 2] - 1, size = noisy_prevalence[i + 1, 2] + 1, prob = proportion_obs, log=T)
-
-    log_weights <- ifelse(is.nan(log_weights), -Inf, log_weights)
+    log_weights <- epi_llik + genetic_llik + dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T)
 
     #if all impossible, then mission abort
     if (max(log_weights) == -Inf) {
