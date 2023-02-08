@@ -18,7 +18,7 @@ smc_skellam <- function(new_x, old_x, birth_rate, death_rate, log=T) {
   nu <- abs(new_x - old_x)
   length <- length(nu)
   logI <- rep(NA, length)
-  cutoff <- 0
+  cutoff <- 10
   set0 <- (1:length)[nu <= cutoff]
   set1 <- (1:length)[nu > cutoff]
 
