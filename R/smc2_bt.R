@@ -35,6 +35,9 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
   n_accepted <- 0
   smc_llik <- rep(NA, iter)
 
+  scale <- rep(NA, iter+1)
+  acceptance <- rep(0, iter)
+
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
 
   #prior on max_birth_rate is uniform
@@ -55,6 +58,8 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
   mu <- rep(0, 3)
   Sigma <- diag(1, nrow = 3, ncol = 3)
   sqrtSigma <- expm::sqrtm(Sigma)
+
+  scale[1] <- s
 
   i <- 1
   run_time <- as.numeric(Sys.time()) - sys_time
@@ -99,9 +104,12 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
     #targeting 10% acceptance
     s <- s + (a - 0.1) * eta
 
+    scale[i+1] <- s
+
     #step 4: accept/reject
     u <- runif(1,0,1)
     if (u <= a) {
+      acceptance[i] <- 1
       n_accepted <- n_accepted + 1
       b_old <- b_new
       p_old <- p_new
@@ -120,6 +128,6 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
     run_time <- as.numeric(Sys.time()) - sys_time
   }
 
-  output <- list("birth_rate" = b_matrix, "prevalence" = p_matrix, "max_birth_rate" = max_b, "sigma" = sigma, "proportion_obs" = p_obs, "acceptance_rate" = n_accepted/(i-1), "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik"=smc_llik)
+  output <- list("birth_rate" = b_matrix, "prevalence" = p_matrix, "max_birth_rate" = max_b, "sigma" = sigma, "proportion_obs" = p_obs, "acceptance_rate" = n_accepted/(i-1), "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik"=smc_llik, "s"=scale, "accept"=acceptance)
   return(output)
 }
