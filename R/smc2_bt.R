@@ -49,6 +49,12 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
   sigma_old <- sigma0
   p_obs_old <- proportion_obs0
 
+  lambda_mbr <- 1/5 #mean of 5
+  lambda_sigma <- 1/0.5 #mean of 0.5
+
+  #prior on max_birth_rate and sigma are exponential
+  #prior on p_obs is uniform(0,1)
+  prior_old <- dexp(x = max_b_old, rate = lambda_mbr, log = T) + dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
   sir <- sir_be(n_particles = n_particles, max_birth_rate = max_b_old, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
   f_hat_old <- sir$int_llik
   b_old <- sir$birth_rate
@@ -73,7 +79,7 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
 
     #step 1: sample max_b_new and sample sigma_new
     #if proposal is negative, then bounce back
-    w <- MASS::mvrnorm(n = 1, mu = mu, Sigma = Sigma)
+    w <- MASS::mvrnorm(n = 1, mu = mu, Sigma = diag(1, nrow=3, ncol=3))
     new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma %*% w
     new <- abs(new)
     max_b_new <- new[1]
@@ -87,18 +93,31 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
         p_obs_new <- -p_obs_new
       }
     }
+    # print(paste0("scale: ", s))
+    # print(paste0("max_b_old: ", max_b_old))
+    # print(paste0("max_b_new: ", max_b_new))
+    # print(paste0("sigma_old: ", sigma_old))
+    # print(paste0("sigma_new: ", sigma_new))
+    # print(paste0("p_obs_old: ", p_obs_old))
+    # print(paste0("p_obs_new: ", p_obs_new))
 
     #step 2: compute likelihood
+    prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
     sir <- sir_be(n_particles = n_particles, max_birth_rate = max_b_new, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
     f_hat_new <- sir$int_llik
     b_new <- sir$birth_rate
     p_new <- sir$prevalence[,2]
     smc_llik[i] <- f_hat_new
+    # print(paste0("prior_old: ", prior_old))
+    # print(paste0("prior_new: ", prior_new))
+    # print(paste0("f_hat_old: ", f_hat_old))
+    # print(paste0("f_hat_new: ", f_hat_new))
 
     #step 3: compute acceptance probability
-    logr <- f_hat_new - f_hat_old
+    logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
+    # print(paste0("a: ", a))
 
     eta <- (i + 10)^(-0.6)
     #targeting 10% acceptance
@@ -107,12 +126,15 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
     scale[i+1] <- s
 
     #step 4: accept/reject
-    u <- runif(1,0,1)
-    if (u <= a) {
+    # u <- runif(1,0,1)
+    # -log(U) ~ Exp(1) where U ~ Uniform(0,1)
+    logu <- -rexp(1)
+    if (logu <= loga) {
       acceptance[i] <- 1
       n_accepted <- n_accepted + 1
       b_old <- b_new
       p_old <- p_new
+      prior_old <- prior_new
       f_hat_old <- f_hat_new
       max_b_old <- max_b_new
       sigma_old <- sigma_new
