@@ -3,7 +3,7 @@
 #' Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Prevalence proposals are negative binomial and birth rate proposals are linear Gaussian.
 #'
 #' @param n_particles number of particles used in the sampling.
-#' @param birth_rate_max maximum value of the birth rate on day 1 of the epidemic.
+#' @param max_birth_rate maximum value of the birth rate on day 1 of the epidemic.
 #' @param sigma standard deviation of the linear gaussian proposal for birth rates.
 #' @param death_rate death rate of the epidemic.
 #' @param noisy_prevalence data frame of observed prevalence per day.
