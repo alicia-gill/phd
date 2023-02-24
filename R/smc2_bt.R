@@ -49,8 +49,8 @@ smc2_bt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0
   sigma_old <- sigma0
   p_obs_old <- proportion_obs0
 
-  lambda_mbr <- 1/5 #mean of 5
-  lambda_sigma <- 1/0.5 #mean of 0.5
+  lambda_mbr <- 1 #mean of 1
+  lambda_sigma <- 1/0.1 #mean of 0.1
 
   #prior on max_birth_rate and sigma are exponential
   #prior on p_obs is uniform(0,1)
