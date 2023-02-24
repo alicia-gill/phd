@@ -23,8 +23,8 @@ sample_inf <- function(ptree, pi) {
   distance <- ape::dist.nodes(ptree)[1:n_leaves, n_leaves+1]
 
   #only keep those with maximum distance
-  max <- round(max(distance), digits=10)
-  keep <- which(distance == max)
+  max <- round(max(distance), digits = 10)
+  keep <- which(abs(distance - max) <= 1e-10)
 
   n <- length(keep)
   u <- runif(n)
