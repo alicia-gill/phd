@@ -26,7 +26,9 @@ rtskellam <- function(n, old_x, birth_rate, death_rate) {
     mu2 <- (old_x*death_rate)[j]
     t <- -old_x[j]+1
     while (is.na(output[i]) == TRUE & count < 100) {
-      x <- extraDistr::rskellam(100, mu1, mu2)
+      b <- rpois(100, mu1)
+      d <- rpois(100, mu2)
+      x <- b-d
       output[i] <- x[x>t][1]
       count <- count + 1
     }
