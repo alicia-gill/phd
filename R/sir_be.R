@@ -74,7 +74,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
       genetic_llik <- dbinom(x = genetic_data[i + 1, 3], size = choose(genetic_data[i + 1, 2], 2), prob = 1 - exp( - 2 * b_sample / x_sample), log = T)
     }
 
-    log_weights <- epi_llik + genetic_llik + dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T)
+    log_weights <- logw + epi_llik + genetic_llik + dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T)
 
     #if all impossible, then mission abort
     if (max(log_weights) == -Inf) {
