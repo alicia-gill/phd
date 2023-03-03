@@ -118,6 +118,8 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     }
 
     normweights[i, ] <- w
+
+#    int_llik <-
   }
 
   int_llik <- apply(logweights,2,sum)
