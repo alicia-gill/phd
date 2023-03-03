@@ -42,7 +42,8 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
   #initialise x_resample to be 1
   x_resample <- prevalence[1, ]
   #initial weights are equal
-  w <- 1/n_particles
+  logw <- rep(0, n_particles)
+  w <- rep(1/n_particles, n_particles)
 
   for (i in 1:N) {
     #sample b
@@ -84,8 +85,8 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
 
     #normalise weights
     lse_weights <- matrixStats::logSumExp(log_weights)
-#    mean_weights <- matrixStats::logSumExp(log_weights + log(w))
-#    int_llik <- int_llik + mean_weights
+    mean_weights <- lse_weights - matrixStats::logSumExp(logw)
+    int_llik <- int_llik + mean_weights
     norm_weights <- exp(log_weights - lse_weights)
     logweights[i,] <- log_weights
 
@@ -95,6 +96,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     #if the ess is below threshold, then resample
     if (ess <= ess_threshold) {
       resample[i] <- 1
+      logw <- rep(0, n_particles)
       w <- rep(1/n_particles, n_particles)
       if (resampling_scheme != "multinomial" & resampling_scheme != "systematic") {
         print("resampling scheme must be multinomial or systematic")
@@ -111,6 +113,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
       b_resample <- b_sample[index]
     } else {
       resample[i] <- 0
+      logw <- log_weights
       w <- norm_weights
       anc[i,] <- 1:n_particles
       x_resample <- x_sample
@@ -118,12 +121,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     }
 
     normweights[i, ] <- w
-
-#    int_llik <-
   }
-
-  int_llik <- apply(logweights,2,sum)
-  int_llik <- matrixStats::logSumExp(int_llik) - log(n_particles)
 
   b <- rep(NA, N)
   p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
