@@ -28,7 +28,8 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
   #prevalence matrix: (N+1) rows to include 1 case on day 0
   prevalence <- matrix(nrow = N + 1, ncol = n_particles)
   #particle weights
-  weights <- matrix(nrow = N, ncol = n_particles)
+  normweights <- matrix(nrow = N, ncol = n_particles)
+  logweights <- matrix(nrow = N, ncol = n_particles)
   #resample indicator
   resample <- rep(NA, N)
   #ess
@@ -83,9 +84,10 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
 
     #normalise weights
     lse_weights <- matrixStats::logSumExp(log_weights)
-    mean_weights <- matrixStats::logSumExp(log_weights + log(w))
-    int_llik <- int_llik + mean_weights
+#    mean_weights <- matrixStats::logSumExp(log_weights + log(w))
+#    int_llik <- int_llik + mean_weights
     norm_weights <- exp(log_weights - lse_weights)
+    logweights[i,] <- log_weights
 
     #resampling
     ess <- 1 / sum(norm_weights^2)
@@ -115,16 +117,19 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
       b_resample <- b_sample
     }
 
-    weights[i, ] <- w
+    normweights[i, ] <- w
   }
+
+  int_llik <- apply(logweights,2,sum)
+  int_llik <- matrixStats::logSumExp(int_llik) - log(n_particles)
 
   b <- rep(NA, N)
   p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
   if (backward_sim == TRUE) {
-    log_norm_weights <- log(weights)
+    log_norm_weights <- log(normweights)
     jt <- rep(NA, 30)
     #day 30
-    jt[N] <- sample(1:n_particles, 1, prob=weights[N,])
+    jt[N] <- sample(1:n_particles, 1, prob=normweights[N,])
     for (t in (N-1):1) {
       x <- birth_rate[t+1, jt[t+1]]
       y <- prevalence[t+2, jt[t+1]]
@@ -137,7 +142,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
       p[i+1,2] <- prevalence[i+1, jt[i]]
     }
   } else {
-    j <- sample(1:n_particles, 1, prob=weights[N,])
+    j <- sample(1:n_particles, 1, prob=normweights[N,])
     a <- anc[,j]
     for (i in 1:N) {
       b[i] <- birth_rate[i,a[i]]
@@ -145,5 +150,5 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     }
   }
 
-  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p))
+  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p, "ancestor"=anc, "weights"=normweights, "br_matrix"=birth_rate, "prev_matrix"=prevalence))
 }
