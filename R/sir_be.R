@@ -43,7 +43,6 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
   x_resample <- prevalence[1, ]
   #initial weights are equal
   logw <- rep(0, n_particles)
-  w <- rep(1/n_particles, n_particles)
 
   for (i in 1:N) {
     #sample b
@@ -89,6 +88,7 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     int_llik <- int_llik + mean_weights
     norm_weights <- exp(log_weights - lse_weights)
     logweights[i,] <- log_weights
+    normweights[i,] <- norm_weights
 
     #resampling
     ess <- 1 / sum(norm_weights^2)
@@ -97,7 +97,6 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     if (ess <= ess_threshold) {
       resample[i] <- 1
       logw <- rep(0, n_particles)
-      w <- rep(1/n_particles, n_particles)
       if (resampling_scheme != "multinomial" & resampling_scheme != "systematic") {
         print("resampling scheme must be multinomial or systematic")
         break
@@ -114,13 +113,10 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     } else {
       resample[i] <- 0
       logw <- log_weights
-      w <- norm_weights
       anc[i,] <- 1:n_particles
       x_resample <- x_sample
       b_resample <- b_sample
     }
-
-    normweights[i, ] <- w
   }
 
   b <- rep(NA, N)
