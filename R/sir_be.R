@@ -122,15 +122,14 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
   b <- rep(NA, N)
   p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
   if (backward_sim == TRUE) {
-    log_norm_weights <- log(normweights)
-    jt <- rep(NA, 30)
-    #day 30
+    jt <- rep(NA, N)
+    #day N
     jt[N] <- sample(1:n_particles, 1, prob=normweights[N,])
     for (t in (N-1):1) {
       x <- birth_rate[t+1, jt[t+1]]
       y <- prevalence[t+2, jt[t+1]]
-      log_sum <- matrixStats::logSumExp(log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate))
-      wtT <- log_norm_weights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate) - log_sum
+      denom <- matrixStats::logSumExp(logweights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate))
+      wtT <- logweights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate) - denom
       jt[t] <- sample(1:n_particles, 1, prob = exp(wtT))
     }
     for (i in 1:N) {
