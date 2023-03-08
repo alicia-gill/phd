@@ -128,8 +128,10 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
     for (t in (N-1):1) {
       x <- birth_rate[t+1, jt[t+1]]
       y <- prevalence[t+2, jt[t+1]]
-      denom <- matrixStats::logSumExp(logweights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate))
-      wtT <- logweights[t,] + dnorm(x, mean = birth_rate[t,], sd = sigma, log = T) + smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate) - denom
+      lin_gau <- dnorm(x, mean = birth_rate[t,], sd = sigma, log = T)
+      skel <- smc_skellam(new_x = y, old_x = prevalence[t+1,], birth_rate = x, death_rate = death_rate)
+      denom <- matrixStats::logSumExp(logweights[t,] + lin_gau + skel)
+      wtT <- logweights[t,] + lin_gau + skel - denom
       jt[t] <- sample(1:n_particles, 1, prob = exp(wtT))
     }
     for (i in 1:N) {
