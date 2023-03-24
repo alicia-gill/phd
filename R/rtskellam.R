@@ -24,23 +24,21 @@ rtskellam <- function(n, old_x, birth_rate, death_rate) {
     }
     mu1 <- (old_x*birth_rate)[j]
     mu2 <- (old_x*death_rate)[j]
-    t <- -old_x[j]+1
-    while (is.na(output[i]) == TRUE & count < 100) {
-      b <- rpois(100, mu1)
-      d <- rpois(100, mu2)
+    #truncate proposals st epidemic cannot die out
+    t <- -old_x[j]
+    while (is.na(output[i]) == TRUE & count < 1000) {
+      b <- rpois(1, mu1)
+      d <- rpois(1, mu2)
       x <- b-d
-      output[i] <- x[x>t][1]
+      if (x>t) {
+        output[i] <- x
+      }
       count <- count + 1
     }
     if (is.na(output[i]) == TRUE) {
-      if (B == 1) {
-        w <- smc_skellam(1:100, rep(old_x[j], 100), birth_rate, death_rate, log=F)
-      }
-      if (B == N) {
-        w <- smc_skellam(1:100, rep(old_x[j], 100), birth_rate[j], death_rate, log=F)
-      }
-      w <- w/sum(w)
-      output[i] <- sample(1:100, 1, prob=w)
+      w <- smc_skellam((t+1):(t+100), rep(old_x[j], 100), birth_rate[j], death_rate, log=T)
+      w <- w - matrixStats::logSumExp(w)
+      output[i] <- sample((t+1):(t+100), 1, prob=exp(w))
     }
   }
   return(output)
