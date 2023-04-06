@@ -15,7 +15,7 @@
 #' genetic_llik(birth_rate = 0.2, ptree = sample_tree, prevalence = prev, stop_time = 50)
 genetic_llik <- function(birth_rate, ptree, prevalence, stop_time, log=T) {
   gen_data <- genetic_data(ptree, stop_time)
-  data <- list("prob" = 2 * birth_rate / prevalence[-1,2],
+  data <- list("prob" = 1 - exp( - 2 * birth_rate / prevalence[-1,2]),
                "n_pairs" = choose(gen_data[-1,2], 2),
                "n_coal" = gen_data[-1,3])
 
