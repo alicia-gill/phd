@@ -15,28 +15,37 @@
 rtskellam <- function(n, old_x, birth_rate, death_rate) {
   N <- length(old_x)
   B <- length(birth_rate)
+  D <- length(death_rate)
   output <- rep(NA, n)
   for (i in 1:n) {
-    count <- 0
     j <- i %% N
     if (j == 0) {
       j <- N
     }
-    mu1 <- (old_x*birth_rate)[j]
-    mu2 <- (old_x*death_rate)[j]
+    k <- i %% B
+    if (k == 0) {
+      k <- B
+    }
+    l <- i %% D
+    if (l == 0) {
+      l <- D
+    }
+    oldx <- old_x[j]
+    mu1 <- oldx*birth_rate[k]
+    mu2 <- oldx*death_rate[l]
+    mu <- c(mu1, mu2)
     #truncate proposals st epidemic cannot die out
-    t <- -old_x[j]
-    while (is.na(output[i]) == TRUE & count < 1000) {
-      b <- rpois(1, mu1)
-      d <- rpois(1, mu2)
-      x <- b-d
+    t <- -oldx
+    for (count in 1:1000) {
+      bd <- rpois(2, mu)
+      x <- bd[1] - bd[2]
       if (x>t) {
         output[i] <- x
+        break
       }
-      count <- count + 1
     }
-    if (is.na(output[i]) == TRUE) {
-      w <- smc_skellam((t+1):(t+100), rep(old_x[j], 100), birth_rate[j], death_rate, log=T)
+    if (count == 1000) {
+      w <- smc_skellam((t+1):(t+100), rep(oldx, 100), birth_rate[k], death_rate[l], log=T)
       w <- w - matrixStats::logSumExp(w)
       output[i] <- sample((t+1):(t+100), 1, prob=exp(w))
     }
