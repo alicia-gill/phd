@@ -41,6 +41,10 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
   mu <- matrix(NA, nrow=iter+1, ncol=3)
   Sigma <- array(NA, c(iter+1,3,3))
 
+  max_b_old <- max_birth_rate0
+  sigma_old <- sigma0
+  p_obs_old <- proportion_obs0
+
   s <- 0
   mu_old <- c(max_b_old, sigma_old, p_obs_old)
   Sigma_old <- diag(1, nrow=3, ncol=3)
@@ -51,10 +55,6 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
   scale[1] <- s
   mu[1,] <- mu_old
   Sigma[1,,] <- Sigma_old
-
-  max_b_old <- max_birth_rate0
-  sigma_old <- sigma0
-  p_obs_old <- proportion_obs0
 
   lambda_mbr <- 1 #mean of 1
   lambda_sigma <- 1/0.1 #mean of 0.1
