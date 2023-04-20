@@ -26,6 +26,7 @@ smc2_bt2 <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
 
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
+  genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
 
   b_matrix <- matrix(NA, nrow=iter, ncol=stop_time)
   p_matrix <- matrix(NA, nrow=iter, ncol=stop_time+1)
@@ -34,18 +35,22 @@ smc2_bt2 <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
   p_obs <- rep(NA, iter)
   n_accepted <- 0
   smc_llik <- rep(NA, iter)
-
+  particles <- matrix(NA, nrow=iter, ncol=stop_time)
   scale <- rep(NA, iter+1)
   acceptance <- rep(0, iter)
   mu <- matrix(NA, nrow=iter+1, ncol=3)
   Sigma <- array(NA, c(iter+1,3,3))
 
-  genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
+  s <- 0
+  mu_old <- c(max_b_old, sigma_old, p_obs_old)
+  Sigma_old <- diag(1, nrow=3, ncol=3)
+  sqrtSigma_old <- expm::sqrtm(Sigma_old)
+  zeta <- 10000 #can be any constant >= 1
+  inv_zeta <- 1/zeta
 
-  #prior on max_birth_rate is uniform
-  #prior on sigma0 is uniform
-
-  particles <- matrix(NA, nrow=iter, ncol=stop_time)
+  scale[1] <- s
+  mu[1,] <- mu_old
+  Sigma[1,,] <- Sigma_old
 
   max_b_old <- max_birth_rate0
   sigma_old <- sigma0
@@ -61,17 +66,6 @@ smc2_bt2 <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
   f_hat_old <- sir$int_llik
   b_old <- sir$birth_rate
   p_old <- sir$prevalence[,2]
-
-  s <- 0
-  mu_old <- c(max_b_old, sigma_old, p_obs_old)
-  Sigma_old <- diag(1, nrow=3, ncol=3)
-  sqrtSigma_old <- expm::sqrtm(Sigma_old)
-  zeta <- 10000 #can be any constant >= 1
-  inv_zeta <- 1/zeta
-
-  scale[1] <- s
-  mu[1,] <- mu_old
-  Sigma[1,,] <- Sigma_old
 
   i <- 1
   run_time <- as.numeric(Sys.time()) - sys_time
@@ -99,13 +93,6 @@ smc2_bt2 <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
         p_obs_new <- -p_obs_new
       }
     }
-    # print(paste0("scale: ", s))
-    # print(paste0("max_b_old: ", max_b_old))
-    # print(paste0("max_b_new: ", max_b_new))
-    # print(paste0("sigma_old: ", sigma_old))
-    # print(paste0("sigma_new: ", sigma_new))
-    # print(paste0("p_obs_old: ", p_obs_old))
-    # print(paste0("p_obs_new: ", p_obs_new))
 
     #step 2: compute likelihood
     prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
@@ -114,16 +101,11 @@ smc2_bt2 <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     b_new <- sir$birth_rate
     p_new <- sir$prevalence[,2]
     smc_llik[i] <- f_hat_new
-    # print(paste0("prior_old: ", prior_old))
-    # print(paste0("prior_new: ", prior_new))
-    # print(paste0("f_hat_old: ", f_hat_old))
-    # print(paste0("f_hat_new: ", f_hat_new))
 
     #step 3: compute acceptance probability
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
-    # print(paste0("a: ", a))
 
     eta <- (i + 10)^(-0.6)
     #targeting 10% acceptance
@@ -132,7 +114,6 @@ smc2_bt2 <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     scale[i+1] <- s
 
     #step 4: accept/reject
-    # u <- runif(1,0,1)
     # -log(U) ~ Exp(1) where U ~ Uniform(0,1)
     logu <- -rexp(1)
     if (logu <= loga) {
@@ -161,7 +142,6 @@ smc2_bt2 <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     if (norm(mu_new, type="2") <= zeta & max_evalue <= zeta & min_evalue >= inv_zeta) {
       mu_old <- mu_new
       Sigma_old <- Sigma_new
-#      print(Sigma_old)
       sqrtSigma_old <- expm::sqrtm(Sigma_old)
     }
     mu[i+1,] <- mu_old
@@ -171,6 +151,6 @@ smc2_bt2 <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     run_time <- as.numeric(Sys.time()) - sys_time
   }
 
-  output <- list("birth_rate" = b_matrix, "prevalence" = p_matrix, "max_birth_rate" = max_b, "sigma" = sigma, "proportion_obs" = p_obs, "acceptance_rate" = n_accepted/(i-1), "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik" = smc_llik, "s"=scale, "accept"=acceptance, "mu"=mu, "Sigma"=Sigma)
+  output <- list("birth_rate" = b_matrix, "prevalence" = p_matrix, "max_birth_rate" = max_b, "sigma" = sigma, "proportion_obs" = p_obs, "acceptance_rate" = n_accepted/(i-1), "run_time" = as.numeric(Sys.time()) - sys_time, "smc_llik" = smc_llik, "s" = scale, "accept" = acceptance, "mu" = mu, "Sigma" = Sigma)
   return(output)
 }
