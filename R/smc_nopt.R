@@ -59,10 +59,11 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
   lambda_mbr <- 1 #mean of 1
   lambda_sigma <- 1/0.1 #mean of 0.1
 
-  if (is.null(n_particles) == TRUE) {
+  if (is.null(n_particles)) {
     prior_old <- dexp(x = max_b_old, rate = lambda_mbr, log = T) + dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
     f_hat_old <- sir_be(n_particles = 10000, max_birth_rate = max_b_old, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
     for (i in 1:500) {
+      print(i)
       w <- MASS::mvrnorm(n = 1, mu = rep(0, 3), Sigma = diag(1, nrow=3, ncol=3))
       new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
       new <- abs(new)
@@ -109,6 +110,7 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     sigma_mean <- 0
     p_obs_mean <- 0
     for (i in 501:1000) {
+      print(i)
       w <- MASS::mvrnorm(n = 1, mu = rep(0, 3), Sigma = diag(1, nrow=3, ncol=3))
       new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
       new <- abs(new)
@@ -159,10 +161,11 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     Ns <- 1000
     nopt_llik <- rep(NA, 100)
     for (r in 1:R) {
+      print(r)
       nopt_llik[r] <- sir_be(n_particles = Ns, max_birth_rate = max_b_mean, sigma = sigma_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns/2, resampling_scheme = resampling_scheme, backward_sim = FALSE)$int_llik
     }
     var <- sum(nopt_llik^2)/R - mean(nopt_llik)^2
-    Nopt <- Ns * (var) / (0.92^2)
+    Nopt <- ceiling(Ns * (var) / (0.92^2))
 
     n_particles <- min(Nopt, 10000)
     ess_threshold <- n_particles/2
