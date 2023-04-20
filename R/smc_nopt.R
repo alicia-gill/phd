@@ -168,14 +168,14 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     ess_threshold <- n_particles/2
   }
 
+  max_b_old <- max_birth_rate0
+  sigma_old <- sigma0
+  p_obs_old <- proportion_obs0
+
   s <- 0
   mu_old <- c(max_b_old, sigma_old, p_obs_old)
   Sigma_old <- diag(1, nrow=3, ncol=3)
   sqrtSigma_old <- expm::sqrtm(Sigma_old)
-
-  max_b_old <- max_birth_rate0
-  sigma_old <- sigma0
-  p_obs_old <- proportion_obs0
 
   #prior on max_birth_rate and sigma are exponential
   #prior on p_obs is uniform(0,1)
