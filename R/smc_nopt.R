@@ -158,7 +158,6 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     R <- 100
     Ns <- 1000
     nopt_llik <- rep(NA, 100)
-    set.seed(5)
     for (r in 1:R) {
       nopt_llik[r] <- sir_be(n_particles = Ns, max_birth_rate = max_b_mean, sigma = sigma_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns/2, resampling_scheme = resampling_scheme, backward_sim = FALSE)$int_llik
     }
