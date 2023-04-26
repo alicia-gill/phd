@@ -56,11 +56,13 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
 
     #sample x
     if (noisy_prevalence[i+1,2] == 0) {
-      x_sample <- x_resample + rtskellam(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate)
-      epi_llik <- 0
+      x_sample <- 1 + rnbinom(n = n_particles, size = 1, p = proportion_obs)
+      epi_llik <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) - dnbinom(x = x_sample - 1, size = 1, prob = proportion_obs, log = T)
+#      x_sample <- x_resample + rtskellam(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate)
+#      epi_llik <- 0
     } else {
       x_sample <- noisy_prevalence[i + 1, 2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
-      epi_llik <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) - dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log=T)
+      epi_llik <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) - dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T)
     }
 
     prevalence[i + 1, ] <- x_sample
