@@ -32,49 +32,73 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
   p_matrix <- matrix(NA, nrow=iter, ncol=stop_time+1)
   max_b <- rep(NA, iter)
   sigma <- rep(NA, iter)
-  p_obs <- rep(NA, iter)
   n_accepted <- 0
   smc_llik <- rep(NA, iter)
   particles <- matrix(NA, nrow=iter, ncol=stop_time)
   scale <- rep(NA, iter+1)
   acceptance <- rep(0, iter)
-  mu <- matrix(NA, nrow=iter+1, ncol=3)
-  Sigma <- array(NA, c(iter+1,3,3))
 
   max_b_old <- max_birth_rate0
   sigma_old <- sigma0
-  p_obs_old <- proportion_obs0
 
   s <- 0
-  mu_old <- c(max_b_old, sigma_old, p_obs_old)
-  Sigma_old <- diag(1, nrow=3, ncol=3)
-  sqrtSigma_old <- expm::sqrtm(Sigma_old)
   zeta <- 10000 #can be any constant >= 1
   inv_zeta <- 1/zeta
 
   scale[1] <- s
-  mu[1,] <- mu_old
-  Sigma[1,,] <- Sigma_old
 
   lambda_mbr <- 1 #mean of 1
   lambda_sigma <- 1/0.1 #mean of 0.1
+
+  sum_noisy <- sum(noisy_prevalence[-1,2])
+
+  if (sum_noisy == 0) {
+    p_obs <- rep(0, iter)
+    mu <- matrix(NA, nrow=iter+1, ncol=2)
+    Sigma <- array(NA, c(iter+1,2,2))
+    p_obs_old <- 0
+    mu_old <- c(max_b_old, sigma_old)
+    Sigma_old <- diag(1, nrow=2, ncol=2)
+    sqrtSigma_old <- expm::sqrtm(Sigma_old)
+    mu[1,] <- mu_old
+    Sigma[1,,] <- Sigma_old
+  } else {
+    p_obs <- rep(NA, iter)
+    mu <- matrix(NA, nrow=iter+1, ncol=3)
+    Sigma <- array(NA, c(iter+1,3,3))
+    p_obs_old <- proportion_obs0
+    mu_old <- c(max_b_old, sigma_old, p_obs_old)
+    Sigma_old <- diag(1, nrow=3, ncol=3)
+    sqrtSigma_old <- expm::sqrtm(Sigma_old)
+    mu[1,] <- mu_old
+    Sigma[1,,] <- Sigma_old
+  }
 
   if (is.null(n_particles)) {
     prior_old <- dexp(x = max_b_old, rate = lambda_mbr, log = T) + dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
     f_hat_old <- sir_be(n_particles = 10000, max_birth_rate = max_b_old, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
     for (i in 1:500) {
-      w <- MASS::mvrnorm(n = 1, mu = rep(0, 3), Sigma = diag(1, nrow=3, ncol=3))
-      new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
-      new <- abs(new)
-      max_b_new <- new[1]
-      sigma_new <- new[2]
-      p_obs_new <- new[3]
-      while (p_obs_new < 0 | p_obs_new > 1) {
-        if (p_obs_new > 1) {
-          p_obs_new <- 1 - p_obs_new
-        }
-        if (p_obs_new < 0) {
-          p_obs_new <- -p_obs_new
+      if (sum_noisy == 0) {
+        w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(1, nrow=2, ncol=2))
+        new <- c(max_b_old, sigma_old) + exp(s) * sqrtSigma_old %*% w
+        new <- abs(new)
+        max_b_new <- new[1]
+        sigma_new <- new[2]
+        p_obs_new <- 0
+      } else {
+        w <- MASS::mvrnorm(n = 1, mu = rep(0, 3), Sigma = diag(1, nrow=3, ncol=3))
+        new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
+        new <- abs(new)
+        max_b_new <- new[1]
+        sigma_new <- new[2]
+        p_obs_new <- new[3]
+        while (p_obs_new < 0 | p_obs_new > 1) {
+          if (p_obs_new > 1) {
+            p_obs_new <- 1 - p_obs_new
+          }
+          if (p_obs_new < 0) {
+            p_obs_new <- -p_obs_new
+          }
         }
       }
       prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
@@ -93,7 +117,11 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
         sigma_old <- sigma_new
         p_obs_old <- p_obs_new
       }
-      Xn <- c(max_b_old, sigma_old, p_obs_old)
+      if (sum_noisy == 0) {
+        Xn <- c(max_b_old, sigma_old)
+      } else {
+        Xn <- c(max_b_old, sigma_old, p_obs_old)
+      }
       mu_new <- (1 - eta) * mu_old + eta * Xn
       Sigma_new <- (1 - eta) * Sigma_old + eta * (Xn - mu_old) %*% t(Xn - mu_old)
       evalues <- eigen(Sigma_new, symmetric = T)$values
@@ -109,18 +137,27 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     sigma_mean <- 0
     p_obs_mean <- 0
     for (i in 501:1000) {
-      w <- MASS::mvrnorm(n = 1, mu = rep(0, 3), Sigma = diag(1, nrow=3, ncol=3))
-      new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
-      new <- abs(new)
-      max_b_new <- new[1]
-      sigma_new <- new[2]
-      p_obs_new <- new[3]
-      while (p_obs_new < 0 | p_obs_new > 1) {
-        if (p_obs_new > 1) {
-          p_obs_new <- 1 - p_obs_new
-        }
-        if (p_obs_new < 0) {
-          p_obs_new <- -p_obs_new
+      if (sum_noisy == 0) {
+        w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(1, nrow=2, ncol=2))
+        new <- c(max_b_old, sigma_old) + exp(s) * sqrtSigma_old %*% w
+        new <- abs(new)
+        max_b_new <- new[1]
+        sigma_new <- new[2]
+        p_obs_new <- 0
+      } else {
+        w <- MASS::mvrnorm(n = 1, mu = rep(0, 3), Sigma = diag(1, nrow=3, ncol=3))
+        new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
+        new <- abs(new)
+        max_b_new <- new[1]
+        sigma_new <- new[2]
+        p_obs_new <- new[3]
+        while (p_obs_new < 0 | p_obs_new > 1) {
+          if (p_obs_new > 1) {
+            p_obs_new <- 1 - p_obs_new
+          }
+          if (p_obs_new < 0) {
+            p_obs_new <- -p_obs_new
+          }
         }
       }
       prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
@@ -142,7 +179,11 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
       max_b_mean <- ((i-501)*max_b_mean + max_b_old)/(i-500)
       sigma_mean <- ((i-501)*sigma_mean + sigma_old)/(i-500)
       p_obs_mean <- ((i-501)*p_obs_mean + p_obs_old)/(i-500)
-      Xn <- c(max_b_old, sigma_old, p_obs_old)
+      if (sum_noisy == 0) {
+        Xn <- c(max_b_old, sigma_old)
+      } else {
+        Xn <- c(max_b_old, sigma_old, p_obs_old)
+      }
       mu_new <- (1 - eta) * mu_old + eta * Xn
       Sigma_new <- (1 - eta) * Sigma_old + eta * (Xn - mu_old) %*% t(Xn - mu_old)
       evalues <- eigen(Sigma_new, symmetric = T)$values
@@ -170,12 +211,20 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
 
   max_b_old <- max_birth_rate0
   sigma_old <- sigma0
-  p_obs_old <- proportion_obs0
 
   s <- 0
-  mu_old <- c(max_b_old, sigma_old, p_obs_old)
-  Sigma_old <- diag(1, nrow=3, ncol=3)
-  sqrtSigma_old <- expm::sqrtm(Sigma_old)
+
+  if (sum_noisy == 0) {
+    p_obs_old <- 0
+    mu_old <- c(max_b_old, sigma_old)
+    Sigma_old <- diag(1, nrow=2, ncol=2)
+    sqrtSigma_old <- expm::sqrtm(Sigma_old)
+  } else {
+    p_obs_old <- proportion_obs0
+    mu_old <- c(max_b_old, sigma_old, p_obs_old)
+    Sigma_old <- diag(1, nrow=3, ncol=3)
+    sqrtSigma_old <- expm::sqrtm(Sigma_old)
+  }
 
   #prior on max_birth_rate and sigma are exponential
   #prior on p_obs is uniform(0,1)
@@ -197,18 +246,27 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
 
     #step 1: sample max_b_new and sample sigma_new
     #if proposal is negative, then bounce back
-    w <- MASS::mvrnorm(n = 1, mu = rep(0, 3), Sigma = diag(1, nrow=3, ncol=3))
-    new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
-    new <- abs(new)
-    max_b_new <- new[1]
-    sigma_new <- new[2]
-    p_obs_new <- new[3]
-    while (p_obs_new < 0 | p_obs_new > 1) {
-      if (p_obs_new > 1) {
-        p_obs_new <- 1 - p_obs_new
-      }
-      if (p_obs_new < 0) {
-        p_obs_new <- -p_obs_new
+    if (sum_noisy == 0) {
+      w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(1, nrow=2, ncol=2))
+      new <- c(max_b_old, sigma_old) + exp(s) * sqrtSigma_old %*% w
+      new <- abs(new)
+      max_b_new <- new[1]
+      sigma_new <- new[2]
+      p_obs_new <- 0
+    } else {
+      w <- MASS::mvrnorm(n = 1, mu = rep(0, 3), Sigma = diag(1, nrow=3, ncol=3))
+      new <- c(max_b_old, sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
+      new <- abs(new)
+      max_b_new <- new[1]
+      sigma_new <- new[2]
+      p_obs_new <- new[3]
+      while (p_obs_new < 0 | p_obs_new > 1) {
+        if (p_obs_new > 1) {
+          p_obs_new <- 1 - p_obs_new
+        }
+        if (p_obs_new < 0) {
+          p_obs_new <- -p_obs_new
+        }
       }
     }
 
@@ -249,9 +307,13 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     p_matrix[i,] <- p_old
     max_b[i] <- max_b_old
     sigma[i] <- sigma_old
-    p_obs[i] <- p_obs_old
 
-    Xn <- c(max_b_old, sigma_old, p_obs_old)
+    if (sum_noisy == 0) {
+      Xn <- c(max_b_old, sigma_old)
+    } else {
+      Xn <- c(max_b_old, sigma_old, p_obs_old)
+      p_obs[i] <- p_obs_old
+    }
     mu_new <- (1 - eta) * mu_old + eta * Xn
     Sigma_new <- (1 - eta) * Sigma_old + eta * (Xn - mu_old) %*% t(Xn - mu_old)
     evalues <- eigen(Sigma_new, symmetric = T)$values
