@@ -205,7 +205,7 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     var <- sum(nopt_llik^2)/R - mean(nopt_llik)^2
     Nopt <- ceiling(Ns * (var) / (0.92^2))
 
-    n_particles <- min(Nopt, 10000)
+    n_particles <- max(1, min(Nopt, 10000))
     ess_threshold <- n_particles/2
   }
 
