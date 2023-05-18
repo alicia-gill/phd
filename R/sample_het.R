@@ -23,12 +23,15 @@ sample_het <- function(ptree, pi) {
   #distance from root node (always coded as n_leaves+1) and leaves (always codes from 1 to n_leaves)
   distance <- ape::dist.nodes(ptree)[1:n_leaves, n_leaves+1]
 
+  #calculate how much to add to edge lengths to make leaves end on particular days
   max <- max(distance)
   change <- (max - distance) %% 1
 
+  #add on those differences
   edges <- which(ptree$edge[,2] <= n_leaves)
   ptree$edge.length[edges] <- ptree$edge.length[edges] + change
 
+  #sample leaves
   u <- runif(n_leaves)
   keep <- (1:n_leaves)[u <= pi]
 
