@@ -4,14 +4,14 @@
 \alias{sample_het}
 \title{Sample from Infected}
 \usage{
-sample_het(ptree, pi)
+sample_het(ptree, pi0, pi1)
 }
 \arguments{
 \item{ptree}{object of class phylo.}
 
-\item{pi}{probability of sampling a leaf.}
+\item{pi0}{probability of sampling a leaf at the present day.}
 
-\item{day}{vector of days to sample from.}
+\item{pi1}{probability of sampling a leaf before the present day.}
 }
 \value{
 object of class phylo; the tree keeping only the sampled leaves.
@@ -20,5 +20,5 @@ object of class phylo; the tree keeping only the sampled leaves.
 Samples and keeps leaves with probability pi.
 }
 \examples{
-sample_het(ptree = full_tree, pi = 0.1)
+sample_het(ptree = full_tree, pi0 = 0, pi1 = 0.01)
 }
