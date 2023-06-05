@@ -9,6 +9,7 @@
 #' @param proportion_obs0 initial value of the proportion of cases observed.
 #' @param death_rate death rate of the epidemic.
 #' @param ptree object of class phylo.
+#' @param day number of days in the past the most recent leaf was sampled.
 #' @param noisy_prevalence data frame of observed prevalence per day.
 #' @param n_particles number of particles used in the importance sampling.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
@@ -20,13 +21,13 @@
 #' @export
 #'
 #' @examples
-#' smc_nopt(iter = 100000, max_birth_rate0 = 1, sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, print = T)
-smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0, death_rate, ptree, noisy_prevalence, n_particles=NULL, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE, print=F) {
+#' smc_nopt(iter = 100000, max_birth_rate0 = 1, sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
+smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy_prevalence, n_particles=NULL, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE, print=F) {
   sys_time <- as.numeric(Sys.time())
 
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
-  genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time)
+  genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
 
   b_matrix <- matrix(NA, nrow=iter, ncol=stop_time)
   p_matrix <- matrix(NA, nrow=iter, ncol=stop_time+1)

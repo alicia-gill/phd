@@ -4,14 +4,14 @@
 #'
 #' @param ptree object of class phylo.
 #' @param stop_time number of days the epidemic simulation was run for.
+#' @param day number of days in the past the most recent leaf was sampled.
 #'
 #' @return data frame with 3 columns and N+1 rows: Column 1 is day, column 2 is the number of lineages at the end of that day, column 3 is the number of coalescences on that day.
 #' @export
 #'
 #' @examples
 #' genetic_data(ptree = sample_tree, stop_time = 50)
-genetic_data <- function(ptree, stop_time) {
-
+genetic_data <- function(ptree, stop_time, day = 0) {
   if (is.null(ptree)) {
     return(NULL)
   }
@@ -28,6 +28,10 @@ genetic_data <- function(ptree, stop_time) {
   if (ltt$time[1]==0) {
     ltt$time <- ltt$time[-1]
     ltt$N <- ltt$N[-1]
+  }
+  if (day > 0) {
+    ltt$time <- c(ltt$time - day, stop_time)
+    ltt$N <- c(ltt$N, 0)
   }
 
   #number of lineages through time
