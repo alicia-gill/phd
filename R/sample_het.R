@@ -21,22 +21,22 @@ sample_het <- function(ptree, pi0, pi1) {
   n_leaves <- length(ptree$tip.label)
 
   #distance from root node (always coded as n_leaves+1) and leaves (always codes from 1 to n_leaves)
-  distance <- ape::dist.nodes(ptree)[1:n_leaves, n_leaves+1]
+  distance <- distToRoot(ptree)
+  max <- max(distance)
 
   #calculate how much to add to edge lengths to make leaves end on particular days
-  max <- max(distance)
   change <- (max - distance) %% 1
 
   #add on those differences
-  edges <- which(ptree$edge[,2] <= n_leaves)
+  edges <- (ptree$edge[,2] <= n_leaves)
   ptree$edge.length[edges] <- ptree$edge.length[edges] + change
 
-  distance <- ape::dist.nodes(ptree)[1:n_leaves, n_leaves+1]
-  max <- max(distance)
+  new_distance <- round(distToRoot(ptree),0)
+  new_max <- max(new_distance)
 
-  #option 1 - split into present/not present and sample separately
+  #split into present/not present and sample separately
   #label leaves
-  day1 <- (1:n_leaves)[which(distance < max)]
+  day1 <- (1:n_leaves)[new_distance < new_max]
   day0 <- (1:n_leaves)[-day1]
   #sample leaves
   u0 <- runif(length(day0))
@@ -45,6 +45,14 @@ sample_het <- function(ptree, pi0, pi1) {
   keep1 <- day1[u1 <= pi1]
   keep <- c(keep0, keep1)
 
+  if (!length(keep0)) {
+    day <- min((new_max - new_distance)[keep1])
+  } else {
+    day <- 0
+  }
+
   new_tree <- ape::keep.tip(ptree, keep)
-  return(new_tree)
+  class(new_tree) <- "phylo"
+  output <- list("ptree"=new_tree, "day"=day)
+  return(output)
 }
