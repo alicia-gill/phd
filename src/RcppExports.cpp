@@ -14,6 +14,42 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// dist_nodes_cpp
+NumericVector dist_nodes_cpp(IntegerMatrix ptree_nodes, NumericVector ptree_lengths, int root_node);
+static SEXP _phd_dist_nodes_cpp_try(SEXP ptree_nodesSEXP, SEXP ptree_lengthsSEXP, SEXP root_nodeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type ptree_nodes(ptree_nodesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type ptree_lengths(ptree_lengthsSEXP);
+    Rcpp::traits::input_parameter< int >::type root_node(root_nodeSEXP);
+    rcpp_result_gen = Rcpp::wrap(dist_nodes_cpp(ptree_nodes, ptree_lengths, root_node));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _phd_dist_nodes_cpp(SEXP ptree_nodesSEXP, SEXP ptree_lengthsSEXP, SEXP root_nodeSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        Rcpp::RNGScope rcpp_rngScope_gen;
+        rcpp_result_gen = PROTECT(_phd_dist_nodes_cpp_try(ptree_nodesSEXP, ptree_lengthsSEXP, root_nodeSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error(CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // systematic_sample_cpp
 NumericVector systematic_sample_cpp(int n_particles, NumericVector norm_weights);
 static SEXP _phd_systematic_sample_cpp_try(SEXP n_particlesSEXP, SEXP norm_weightsSEXP) {
@@ -54,6 +90,7 @@ RcppExport SEXP _phd_systematic_sample_cpp(SEXP n_particlesSEXP, SEXP norm_weigh
 static int _phd_RcppExport_validate(const char* sig) { 
     static std::set<std::string> signatures;
     if (signatures.empty()) {
+        signatures.insert("NumericVector(*dist_nodes_cpp)(IntegerMatrix,NumericVector,int)");
         signatures.insert("NumericVector(*systematic_sample_cpp)(int,NumericVector)");
     }
     return signatures.find(sig) != signatures.end();
@@ -61,12 +98,14 @@ static int _phd_RcppExport_validate(const char* sig) {
 
 // registerCCallable (register entry points for exported C++ functions)
 RcppExport SEXP _phd_RcppExport_registerCCallable() { 
+    R_RegisterCCallable("phd", "_phd_dist_nodes_cpp", (DL_FUNC)_phd_dist_nodes_cpp_try);
     R_RegisterCCallable("phd", "_phd_systematic_sample_cpp", (DL_FUNC)_phd_systematic_sample_cpp_try);
     R_RegisterCCallable("phd", "_phd_RcppExport_validate", (DL_FUNC)_phd_RcppExport_validate);
     return R_NilValue;
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_phd_dist_nodes_cpp", (DL_FUNC) &_phd_dist_nodes_cpp, 3},
     {"_phd_systematic_sample_cpp", (DL_FUNC) &_phd_systematic_sample_cpp, 2},
     {"_phd_RcppExport_registerCCallable", (DL_FUNC) &_phd_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}

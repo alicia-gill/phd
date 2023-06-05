@@ -25,6 +25,27 @@ namespace phd {
         }
     }
 
+    inline NumericVector dist_nodes_cpp(IntegerMatrix ptree_nodes, NumericVector ptree_lengths, int root_node) {
+        typedef SEXP(*Ptr_dist_nodes_cpp)(SEXP,SEXP,SEXP);
+        static Ptr_dist_nodes_cpp p_dist_nodes_cpp = NULL;
+        if (p_dist_nodes_cpp == NULL) {
+            validateSignature("NumericVector(*dist_nodes_cpp)(IntegerMatrix,NumericVector,int)");
+            p_dist_nodes_cpp = (Ptr_dist_nodes_cpp)R_GetCCallable("phd", "_phd_dist_nodes_cpp");
+        }
+        RObject rcpp_result_gen;
+        {
+            RNGScope RCPP_rngScope_gen;
+            rcpp_result_gen = p_dist_nodes_cpp(Shield<SEXP>(Rcpp::wrap(ptree_nodes)), Shield<SEXP>(Rcpp::wrap(ptree_lengths)), Shield<SEXP>(Rcpp::wrap(root_node)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<NumericVector >(rcpp_result_gen);
+    }
+
     inline NumericVector systematic_sample_cpp(int n_particles, NumericVector norm_weights) {
         typedef SEXP(*Ptr_systematic_sample_cpp)(SEXP,SEXP);
         static Ptr_systematic_sample_cpp p_systematic_sample_cpp = NULL;
