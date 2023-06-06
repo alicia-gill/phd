@@ -12,6 +12,7 @@ smc_nopt(
   proportion_obs0,
   death_rate,
   ptree,
+  day = 0,
   noisy_prevalence,
   n_particles = NULL,
   ess_threshold = n_particles/2,
@@ -35,6 +36,8 @@ smc_nopt(
 
 \item{ptree}{object of class phylo.}
 
+\item{day}{number of days in the past the most recent leaf was sampled.}
+
 \item{noisy_prevalence}{data frame of observed prevalence per day.}
 
 \item{n_particles}{number of particles used in the importance sampling.}
@@ -54,5 +57,5 @@ list containing: birth rate, prevalence, proportion observed, maximum birth rate
 Implements an SMC-MCMC with adaptive resampling when the epidemic with birth rate varying over time has been partially observed with known proportion. MH adaptation of shape and scale. Unknown optimum number of particles.
 }
 \examples{
-smc_nopt(iter = 100000, max_birth_rate0 = 1, sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, noisy_prevalence = noisy_prev, print = T)
+smc_nopt(iter = 100000, max_birth_rate0 = 1, sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
 }

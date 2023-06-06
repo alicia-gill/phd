@@ -3,6 +3,7 @@
 export(bin_proposal)
 export(change_pt)
 export(constant)
+export(dist_nodes_cpp)
 export(epidemic)
 export(epidemic_bt)
 export(genetic_data)

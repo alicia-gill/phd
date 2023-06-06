@@ -4,10 +4,12 @@
 \alias{sample_het}
 \title{Sample from Infected}
 \usage{
-sample_het(ptree, pi0, pi1)
+sample_het(ptree, day = 0, pi0, pi1)
 }
 \arguments{
 \item{ptree}{object of class phylo.}
+
+\item{day}{how many days in the past the most recent leaf is.}
 
 \item{pi0}{probability of sampling a leaf at the present day.}
 
