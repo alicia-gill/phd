@@ -48,7 +48,7 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
 
   scale[1] <- s
 
-  lambda_mbr <- 1 #mean of 1
+#  lambda_mbr <- 1 #mean of 1
   lambda_sigma <- 1/0.1 #mean of 0.1
 
   sum_noisy <- sum(noisy_prevalence[-1,2])
@@ -76,7 +76,8 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
   }
 
   if (is.null(n_particles)) {
-    prior_old <- dexp(x = max_b_old, rate = lambda_mbr, log = T) + dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
+#    prior_old <- dexp(x = max_b_old, rate = lambda_mbr, log = T) + dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
+    prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
     f_hat_old <- sir_be(n_particles = 10000, max_birth_rate = max_b_old, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
     for (i in 1:500) {
       if (sum_noisy == 0) {
@@ -102,7 +103,8 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
           }
         }
       }
-      prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
+#      prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
+      prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
       f_hat_new <- sir_be(n_particles = 10000, max_birth_rate = max_b_new, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
       logr <- prior_new + f_hat_new - prior_old - f_hat_old
       loga <- min(0,logr)
@@ -161,7 +163,8 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
           }
         }
       }
-      prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
+#      prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
+      prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
       f_hat_new <- sir_be(n_particles = 10000, max_birth_rate = max_b_new, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
       logr <- prior_new + f_hat_new - prior_old - f_hat_old
       loga <- min(0,logr)
@@ -229,7 +232,8 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
 
   #prior on max_birth_rate and sigma are exponential
   #prior on p_obs is uniform(0,1)
-  prior_old <- dexp(x = max_b_old, rate = lambda_mbr, log = T) + dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
+#  prior_old <- dexp(x = max_b_old, rate = lambda_mbr, log = T) + dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
+  prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
   sir <- sir_be(n_particles = n_particles, max_birth_rate = max_b_old, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
   f_hat_old <- sir$int_llik
   b_old <- sir$birth_rate
@@ -272,12 +276,13 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     }
 
     #step 2: compute likelihood
-    prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
+#    prior_new <- dexp(x = max_b_new, rate = lambda_mbr, log = T) + dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
+    prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
     sir <- sir_be(n_particles = n_particles, max_birth_rate = max_b_new, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
     f_hat_new <- sir$int_llik
     b_new <- sir$birth_rate
     p_new <- sir$prevalence[,2]
-    smc_llik[i] <- f_hat_new
+#    smc_llik[i] <- f_hat_new
 
     #step 3: compute acceptance probability
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
@@ -308,6 +313,7 @@ smc_nopt <- function(iter, max_time=Inf, max_birth_rate0, sigma0, proportion_obs
     p_matrix[i,] <- p_old
     max_b[i] <- max_b_old
     sigma[i] <- sigma_old
+    smc_llik[i] <- f_hat_old
 
     if (sum_noisy == 0) {
       Xn <- c(max_b_old, sigma_old)
