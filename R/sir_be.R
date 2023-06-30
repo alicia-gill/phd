@@ -18,7 +18,7 @@
 #'
 #' @examples
 #' sir_be(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
-sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, resampling_scheme = "multinomial", backward_sim = TRUE) {
+sir_be <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, resampling_scheme = "multinomial", backward_sim = TRUE) {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1
   #ancestor matrix
@@ -47,7 +47,8 @@ sir_be <- function(n_particles, max_birth_rate, sigma, death_rate, noisy_prevale
   for (i in 1:N) {
     #sample b
     if (i == 1) {
-      b_sample <- runif(n_particles, min=0, max=max_birth_rate)
+      rate <- 1/(death_rate*2)
+      b_sample <- rexp(n_particles, rate=rate)
     } else {
       b_sample <- rnorm(n_particles, mean = b_resample, sd = sigma)
       #reflect off 0
