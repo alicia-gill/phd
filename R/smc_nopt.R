@@ -75,7 +75,6 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
     prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
     f_hat_old <- sir_mix(n_particles = 1000, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
     for (i in 1:500) {
-      print(i)
       if (sum_noisy == 0) {
         w <- MASS::mvrnorm(n = 1, mu = rep(0, 1), Sigma = diag(1, nrow=1, ncol=1))
         new <- c(sigma_old) + exp(s) * sqrtSigma_old %*% w
@@ -131,7 +130,6 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
     sigma_mean <- 0
     p_obs_mean <- 0
     for (i in 501:1000) {
-      print(i)
       if (sum_noisy == 0) {
         w <- MASS::mvrnorm(n = 1, mu = rep(0, 1), Sigma = diag(1, nrow=1, ncol=1))
         new <- c(sigma_old) + exp(s) * sqrtSigma_old %*% w
