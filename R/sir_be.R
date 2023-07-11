@@ -3,7 +3,6 @@
 #' Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Prevalence proposals are negative binomial and birth rate proposals are linear Gaussian.
 #'
 #' @param n_particles number of particles used in the sampling.
-#' @param max_birth_rate maximum value of the birth rate on day 1 of the epidemic.
 #' @param sigma standard deviation of the linear gaussian proposal for birth rates.
 #' @param death_rate death rate of the epidemic.
 #' @param noisy_prevalence data frame of observed prevalence per day.
@@ -17,7 +16,7 @@
 #' @export
 #'
 #' @examples
-#' sir_be(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
+#' sir_be(n_particles = 100, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
 sir_be <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, resampling_scheme = "multinomial", backward_sim = TRUE) {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1

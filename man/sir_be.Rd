@@ -6,7 +6,6 @@
 \usage{
 sir_be(
   n_particles,
-  max_birth_rate,
   sigma,
   death_rate,
   noisy_prevalence,
@@ -19,8 +18,6 @@ sir_be(
 }
 \arguments{
 \item{n_particles}{number of particles used in the sampling.}
-
-\item{max_birth_rate}{maximum value of the birth rate on day 1 of the epidemic.}
 
 \item{sigma}{standard deviation of the linear gaussian proposal for birth rates.}
 
@@ -37,6 +34,8 @@ sir_be(
 \item{resampling_scheme}{"multinomial" or "systematic".}
 
 \item{backward_sim}{logical; if TRUE, uses backward simulation.}
+
+\item{max_birth_rate}{maximum value of the birth rate on day 1 of the epidemic.}
 }
 \value{
 log-likelihood
