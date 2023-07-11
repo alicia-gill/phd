@@ -7,7 +7,6 @@
 smc_nopt(
   iter,
   max_time = Inf,
-  max_birth_rate0,
   sigma0,
   proportion_obs0,
   death_rate,
@@ -25,8 +24,6 @@ smc_nopt(
 \item{iter}{number of iterations to run the algorithm for.}
 
 \item{max_time}{maximum number of seconds to run the algorithm for.}
-
-\item{max_birth_rate0}{initial value of the maximum birth rate.}
 
 \item{sigma0}{initial value of the linear gaussian standard deviation.}
 
@@ -57,5 +54,5 @@ list containing: birth rate, prevalence, proportion observed, maximum birth rate
 Implements an SMC-MCMC with adaptive resampling when the epidemic with birth rate varying over time has been partially observed with known proportion. MH adaptation of shape and scale. Unknown optimum number of particles.
 }
 \examples{
-smc_nopt(iter = 100000, max_birth_rate0 = 1, sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
+smc_nopt(iter = 100000, sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
 }
