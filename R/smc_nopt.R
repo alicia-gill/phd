@@ -101,7 +101,7 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
     #step 1: sample sample sigma_new
     #if proposal is negative, then bounce back
     if (sum_noisy == 0) {
-      w <- rnorm(n = 1, mu = 0, sd = 1)
+      w <- rnorm(n = 1, mean = 0, sd = 1)
       sigma_new <- sigma_old + exp(s) * sqrtSigma_old * w
       sigma_new <- abs(sigma_new)
       p_obs_new <- 0

@@ -59,7 +59,7 @@ find_nopt <- function(sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy
     }
     #if no data observed, then p_obs is always 0
     if (sum_noisy == 0) {
-      w <- rnorm(n = 1, mu = 0, sd = 1)
+      w <- rnorm(n = 1, mean = 0, sd = 1)
       new <- sigma_old + exp(s) * sqrtSigma_old %*% w
       new <- abs(new)
       sigma_new <- new
@@ -125,7 +125,7 @@ find_nopt <- function(sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy
 
     #if no data observed, then p_obs is always 0
     if (sum_noisy == 0) {
-      w <- rnorm(n = 1, mu = 0, sd = 1)
+      w <- rnorm(n = 1, mean = 0, sd = 1)
       new <- sigma_old + exp(s) * sqrtSigma_old %*% w
       new <- abs(new)
       sigma_new <- new
