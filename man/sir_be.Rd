@@ -34,8 +34,6 @@ sir_be(
 \item{resampling_scheme}{"multinomial" or "systematic".}
 
 \item{backward_sim}{logical; if TRUE, uses backward simulation.}
-
-\item{max_birth_rate}{maximum value of the birth rate on day 1 of the epidemic.}
 }
 \value{
 log-likelihood
@@ -44,5 +42,5 @@ log-likelihood
 Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Prevalence proposals are negative binomial and birth rate proposals are linear Gaussian.
 }
 \examples{
-sir_be(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
+sir_be(n_particles = 100, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
 }
