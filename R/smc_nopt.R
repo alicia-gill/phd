@@ -24,6 +24,15 @@
 smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy_prevalence, n_particles=NULL, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE, print=F) {
   sys_time <- as.numeric(Sys.time())
 
+  if (is.null(n_particles)) {
+    n_particles <- rep(NA, 3)
+    for (i in 1:3) {
+      n_particles[i] <- find_nopt(sigma0 = sigma0, proportion_obs0 = proportion_obs0, death_rate = death_rate, ptree = ptree, day = day, noisy_prevalence = noisy_prevalence, resampling_scheme = resampling_scheme)
+    }
+    n_particles <- median(n_particles)
+    ess_threshold <- n_particles/2
+  }
+
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
@@ -54,9 +63,9 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
     mu <- matrix(NA, nrow=iter+1, ncol=1)
     Sigma <- array(NA, c(iter+1,1,1))
     p_obs_old <- 0
-    mu_old <- c(sigma_old)
-    Sigma_old <- diag(1, nrow=1, ncol=1)
-    sqrtSigma_old <- expm::sqrtm(Sigma_old)
+    mu_old <- sigma_old
+    Sigma_old <- 1
+    sqrtSigma_old <- sqrt(Sigma_old)
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
   } else {
@@ -69,149 +78,6 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
     sqrtSigma_old <- expm::sqrtm(Sigma_old)
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
-  }
-
-  if (is.null(n_particles)) {
-    prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
-    f_hat_old <- sir_mix(n_particles = 1000, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
-    for (i in 1:500) {
-      if (sum_noisy == 0) {
-        w <- MASS::mvrnorm(n = 1, mu = rep(0, 1), Sigma = diag(1, nrow=1, ncol=1))
-        new <- c(sigma_old) + exp(s) * sqrtSigma_old %*% w
-        new <- abs(new)
-        sigma_new <- new[1]
-        p_obs_new <- 0
-      } else {
-        w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(1, nrow=2, ncol=2))
-        new <- c(sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
-        new <- abs(new)
-        sigma_new <- new[1]
-        p_obs_new <- new[2]
-        while (p_obs_new < 0 | p_obs_new > 1) {
-          if (p_obs_new > 1) {
-            p_obs_new <- 1 - p_obs_new
-          }
-          if (p_obs_new < 0) {
-            p_obs_new <- -p_obs_new
-          }
-        }
-      }
-      prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
-      f_hat_new <- sir_mix(n_particles = 1000, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
-      logr <- prior_new + f_hat_new - prior_old - f_hat_old
-      loga <- min(0,logr)
-      a <- exp(loga)
-      eta <- (i + 10)^(-0.6)
-      #targeting 10% acceptance
-      s <- s + (a - 0.1) * eta
-      logu <- -rexp(1)
-      if (logu <= loga) {
-        prior_old <- prior_new
-        f_hat_old <- f_hat_new
-        sigma_old <- sigma_new
-        p_obs_old <- p_obs_new
-      }
-      if (sum_noisy == 0) {
-        Xn <- c(sigma_old)
-      } else {
-        Xn <- c(sigma_old, p_obs_old)
-      }
-      mu_new <- (1 - eta) * mu_old + eta * Xn
-      Sigma_new <- (1 - eta) * Sigma_old + eta * (Xn - mu_old) %*% t(Xn - mu_old)
-      evalues <- eigen(Sigma_new, symmetric = T)$values
-      min_evalue <- min(evalues)*exp(s)
-      max_evalue <- max(evalues)*exp(s)
-      if (norm(mu_new, type="2") <= zeta & max_evalue <= zeta & min_evalue >= inv_zeta) {
-        mu_old <- mu_new
-        Sigma_old <- Sigma_new
-        sqrtSigma_old <- expm::sqrtm(Sigma_old)
-      }
-    }
-    sigma_mean <- 0
-    p_obs_mean <- 0
-    for (i in 501:1000) {
-      if (sum_noisy == 0) {
-        w <- MASS::mvrnorm(n = 1, mu = rep(0, 1), Sigma = diag(1, nrow=1, ncol=1))
-        new <- c(sigma_old) + exp(s) * sqrtSigma_old %*% w
-        new <- abs(new)
-        sigma_new <- new[1]
-        p_obs_new <- 0
-      } else {
-        w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(1, nrow=2, ncol=2))
-        new <- c(sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
-        new <- abs(new)
-        sigma_new <- new[1]
-        p_obs_new <- new[2]
-        while (p_obs_new < 0 | p_obs_new > 1) {
-          if (p_obs_new > 1) {
-            p_obs_new <- 1 - p_obs_new
-          }
-          if (p_obs_new < 0) {
-            p_obs_new <- -p_obs_new
-          }
-        }
-      }
-      prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
-      f_hat_new <- sir_mix(n_particles = 1000, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = 5000, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
-      logr <- prior_new + f_hat_new - prior_old - f_hat_old
-      loga <- min(0,logr)
-      a <- exp(loga)
-      eta <- (i + 10)^(-0.6)
-      #targeting 10% acceptance
-      s <- s + (a - 0.1) * eta
-      logu <- -rexp(1)
-      if (logu <= loga) {
-        prior_old <- prior_new
-        f_hat_old <- f_hat_new
-        sigma_old <- sigma_new
-        p_obs_old <- p_obs_new
-      }
-      sigma_mean <- ((i-501)*sigma_mean + sigma_old)/(i-500)
-      p_obs_mean <- ((i-501)*p_obs_mean + p_obs_old)/(i-500)
-      if (sum_noisy == 0) {
-        Xn <- c(sigma_old)
-      } else {
-        Xn <- c(sigma_old, p_obs_old)
-      }
-      mu_new <- (1 - eta) * mu_old + eta * Xn
-      Sigma_new <- (1 - eta) * Sigma_old + eta * (Xn - mu_old) %*% t(Xn - mu_old)
-      evalues <- eigen(Sigma_new, symmetric = T)$values
-      min_evalue <- min(evalues)*exp(s)
-      max_evalue <- max(evalues)*exp(s)
-      if (norm(mu_new, type="2") <= zeta & max_evalue <= zeta & min_evalue >= inv_zeta) {
-        mu_old <- mu_new
-        Sigma_old <- Sigma_new
-        sqrtSigma_old <- expm::sqrtm(Sigma_old)
-      }
-    }
-
-    R <- 100
-    Ns <- 1000
-    nopt_llik <- rep(NA, R)
-    for (r in 1:R) {
-      nopt_llik[r] <- sir_mix(n_particles = Ns, sigma = sigma_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns/2, resampling_scheme = resampling_scheme, backward_sim = FALSE)$int_llik
-    }
-    var <- sum(nopt_llik^2)/R - mean(nopt_llik)^2
-    Nopt <- ceiling(Ns * (var) / (0.92^2))
-
-    n_particles <- max(1, min(Nopt, 10000))
-    ess_threshold <- n_particles/2
-  }
-
-  sigma_old <- sigma0
-
-  s <- 0
-
-  if (sum_noisy == 0) {
-    p_obs_old <- 0
-    mu_old <- c(sigma_old)
-    Sigma_old <- diag(1, nrow=1, ncol=1)
-    sqrtSigma_old <- expm::sqrtm(Sigma_old)
-  } else {
-    p_obs_old <- proportion_obs0
-    mu_old <- c(sigma_old, p_obs_old)
-    Sigma_old <- diag(1, nrow=2, ncol=2)
-    sqrtSigma_old <- expm::sqrtm(Sigma_old)
   }
 
   #prior on sigma is exponential
@@ -235,10 +101,9 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
     #step 1: sample sample sigma_new
     #if proposal is negative, then bounce back
     if (sum_noisy == 0) {
-      w <- MASS::mvrnorm(n = 1, mu = rep(0, 1), Sigma = diag(1, nrow=1, ncol=1))
-      new <- c(sigma_old) + exp(s) * sqrtSigma_old %*% w
-      new <- abs(new)
-      sigma_new <- new[1]
+      w <- rnorm(n = 1, mu = 0, Sigma = 1)
+      sigma_new <- sigma_old + exp(s) * sqrtSigma_old * w
+      sigma_new <- abs(sigma_new)
       p_obs_new <- 0
     } else {
       w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(1, nrow=2, ncol=2))
@@ -293,7 +158,7 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
     smc_llik[i] <- f_hat_old
 
     if (sum_noisy == 0) {
-      Xn <- c(sigma_old)
+      Xn <- sigma_old
     } else {
       Xn <- c(sigma_old, p_obs_old)
       p_obs[i] <- p_obs_old
