@@ -24,9 +24,6 @@ smc_skellam <- function(new_x, old_x, birth_rate, death_rate, log=T) {
   set0 <- (1:length)[nu <= nu_cutoff & x <= x_cutoff] #use log(besselI)
   set1 <- (1:length)[nu <= nu_cutoff & x > x_cutoff] #use Bessel::besselIasym for small/moderate nu and large x
   set2 <- (1:length)[nu > nu_cutoff] #use Bessel::besselI.nuAsym for large nu (and x)
-  l0 <- length(set0)
-  l1 <- length(set1)
-  l2 <- length(set2)
 
   if (length(birth_rate) > 1) {
     logI[set0] <- log(besselI(x = 2 * old_x[set0] * sqrt(birth_rate[set0] * death_rate), nu = nu[set0], expon.scaled = T))
