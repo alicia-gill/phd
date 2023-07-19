@@ -63,7 +63,7 @@ sir_mix <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion
       #if proportion_obs is 0, we want to sample entirely from the prior
       #if proportion_obs is 1, we want to sample entirely from the data
       #from proportion_obs>=0.2, only sample from the data
-      q <- min(0.9, proportion_obs/0.2)
+      q <- min(0.8, proportion_obs/0.2)
       #if index is 0, sample from prior
       #if index is 1, sample from data
       index <- rep(0, n_particles)
