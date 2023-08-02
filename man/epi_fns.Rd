@@ -6,6 +6,7 @@
 \alias{change_pt}
 \alias{linear_dec}
 \alias{linear_inc}
+\alias{peak}
 \title{A collection of functions for the birth rate in used to generate epidemics}
 \usage{
 constant(t, stop_time, a = 0.3)
@@ -15,6 +16,8 @@ change_pt(t, stop_time, cp = 0.5, a = 0.5, b = 0.1)
 linear_dec(t, stop_time, a = 0.5, b = 0.1)
 
 linear_inc(t, stop_time, a = 0.1, b = 0.5)
+
+peak(t, stop_time, a = 0.1, b = 0.5)
 }
 \arguments{
 \item{t}{time}

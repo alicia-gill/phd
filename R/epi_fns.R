@@ -38,3 +38,15 @@ linear_dec <- function(t, stop_time, a=0.5, b=0.1) {
 linear_inc <- function(t, stop_time, a=0.1, b=0.5) {
   return(a + t*(b-a)/stop_time)
 }
+
+#' @rdname epi_fns
+#' @export
+peak <- function(t, stop_time, a=0.1, b=0.5) {
+  grad <- (b-a)/(stop_time*0.5)
+  if (t <= stop_time*0.5) {
+    return(a + t*grad)
+  } else {
+    return(2*b - a - t*grad)
+  }
+}
+
