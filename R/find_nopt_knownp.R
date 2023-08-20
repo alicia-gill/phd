@@ -33,7 +33,7 @@ find_nopt_knownp <- function(sigma0, proportion_obs, death_rate, ptree, day = 0,
   Sigma_old <- 1
   sqrtSigma_old <- sqrt(Sigma_old)
 
-  n_particles <- 5000
+  n_particles <- 2000
   ess_threshold <- n_particles/2
 
   prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T)
@@ -126,7 +126,7 @@ find_nopt_knownp <- function(sigma0, proportion_obs, death_rate, ptree, day = 0,
   }
 
   R <- 100
-  Ns <- 5000
+  Ns <- 2000
   nopt_llik <- rep(NA, R)
   for (r in 1:R) {
     nopt_llik[r] <- sir_mix(n_particles = Ns, sigma = sigma_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = proportion_obs, genetic_data = genetic_data, ess_threshold = Ns/2, resampling_scheme = resampling_scheme, backward_sim = FALSE)$int_llik
@@ -134,7 +134,7 @@ find_nopt_knownp <- function(sigma0, proportion_obs, death_rate, ptree, day = 0,
   var <- sum(nopt_llik^2)/R - mean(nopt_llik)^2
   Nopt <- ceiling(Ns * (var) / (0.92^2))
 
-  n_particles <- max(1, min(Nopt, 5000))
+  n_particles <- max(1, min(Nopt, 2000))
 
   return(n_particles)
 }
