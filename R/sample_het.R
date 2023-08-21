@@ -21,42 +21,67 @@ sample_het <- function(ptree, day=0, pi0, pi1) {
   #number of leaves
   n_leaves <- length(ptree$tip.label)
 
-  #distance from root node (always coded as n_leaves+1) and leaves (always codes from 1 to n_leaves)
-  distance <- distToRoot(ptree)
-  max <- max(distance)
+  #if day is 0, then need to separate leaves into present day and past
+  if (day == 0) {
 
-  #calculate how much to add to edge lengths to make leaves end on particular days
-  change <- (max - distance) %% 1
+    distance <- distToRoot(ptree)
+    max <- max(distance)
 
-  #add on those differences
-  edges <- (ptree$edge[,2] <= n_leaves)
-  ptree$edge.length[edges] <- ptree$edge.length[edges] + change
+    #calculate how much to add to edge lengths to make leaves end on particular days
+    change <- (max - distance) %% 1
 
-  new_distance <- round(distToRoot(ptree),0)
-  new_max <- max(new_distance)
+    #add on those differences
+    edges <- (ptree$edge[,2] <= n_leaves)
+    ptree$edge.length[edges] <- ptree$edge.length[edges] + change
 
-  #split into present/not present and sample separately
-  #label leaves
-  day1 <- (1:n_leaves)[new_distance < new_max + day]
-  day0 <- (1:n_leaves)[-day1]
-  #sample leaves
-  u0 <- runif(length(day0))
-  keep0 <- day0[u0 <= pi0]
-  u1 <- runif(length(day1))
-  keep1 <- day1[u1 <= pi1]
-  keep <- c(keep0, keep1)
+    new_distance <- distToRoot(ptree)
+    new_max <- max(new_distance)
 
-  if (!length(keep)) {
-    new_tree <- NULL
-    day <- NULL
-  } else {
-    if (!length(keep0)) {
-      day <- min((new_max - new_distance)[keep1]) + day
+    day1 <- (1:n_leaves)[round(new_max - new_distance, 0) > 0]
+    day0 <- (1:n_leaves)[-day1]
+    #sample leaves
+    u0 <- runif(length(day0))
+    keep0 <- day0[u0 <= pi0]
+    u1 <- runif(length(day1))
+    keep1 <- day1[u1 <= pi1]
+    keep <- c(keep0, keep1)
+
+    if (!length(keep)) {
+      new_tree <- NULL
+      day <- NULL
     } else {
-      day <- day
+      if (!length(keep0)) {
+        day <- min((new_max - new_distance)[keep1]) + day
+      } else {
+        day <- day
+      }
+      new_tree <- ape::keep.tip(ptree, keep)
+      class(new_tree) <- "phylo"
     }
-    new_tree <- ape::keep.tip(ptree, keep)
-    class(new_tree) <- "phylo"
+
+  } else {
+    new_distance <- distToRoot(ptree)
+    new_max <- max(new_distance)
+
+    day1 <- (1:n_leaves)
+    u1 <- runif(length(day1))
+    keep1 <- day1[u1 <= pi1]
+    keep0 <- NULL
+    keep <- keep1
+
+    if (!length(keep)) {
+      new_tree <- NULL
+      day <- NULL
+    } else {
+      if (!length(keep0)) {
+        day <- min((new_max - new_distance)[keep1]) + day
+      } else {
+        day <- day
+      }
+      new_tree <- ape::keep.tip(ptree, keep)
+      class(new_tree) <- "phylo"
+    }
+
   }
 
   output <- list("ptree"=new_tree, "day"=day)
