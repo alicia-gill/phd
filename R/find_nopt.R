@@ -187,15 +187,18 @@ find_nopt <- function(sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy
   }
 
   R <- 100
-  Ns <- 2000
+  Ns <- 1000
   nopt_llik <- rep(NA, R)
   for (r in 1:R) {
+    if (print == T) {
+      print(r)
+    }
     nopt_llik[r] <- sir_mix(n_particles = Ns, sigma = sigma_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns/2, resampling_scheme = resampling_scheme, backward_sim = FALSE)$int_llik
   }
   var <- sum(nopt_llik^2)/R - mean(nopt_llik)^2
   Nopt <- ceiling(Ns * (var) / (0.92^2))
 
-  n_particles <- max(1, min(Nopt, 2000))
+  n_particles <- max(1, Nopt)
 
   return(n_particles)
 }
