@@ -80,17 +80,16 @@ sir_mix <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion
         x_sample[index==1] <- noisy_prevalence[i+1,2] + rnbinom(n = sum_index, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
       }
       #proposal probability is (1-q)*prior + q*data
-      lse_vector <- matrix(data = c(log(1-q) + smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T), log(q) + dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T)), ncol=2)
-      epi_llik <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) - apply(lse_vector, 1, matrixStats::logSumExp)
+      #epi_lik is prior / (1-q)*prior + q*data = 1 / ((1-q) + q*data/prior)
+      #epi_llik is -log((1-q) + q*data/prior)
+      lse_vector <- matrix(data = c(rep(log(1-q), n_particles), log(q) + dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T) - smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T)), ncol=2)
+      epi_llik <- rep(NA, n_particles)
+      for (j in 1:n_particles) {
+        epi_llik[j] <- - matrixStats::logSumExp(lse_vector[j,])
+      }
+      #lse_vector <- matrix(data = c(rep(log(1-q), n_particles), log(q) + dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T) - smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T)), ncol=2)
+      #epi_llik <- -apply(lse_vector, 1, matrixStats::logSumExp)
     }
-
-    # if (noisy_prevalence[i+1,2] == 0) {
-    #   x_sample <- x_resample + rtskellam(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate)
-    #   epi_llik <- 0
-    # } else {
-    #   x_sample <- noisy_prevalence[i + 1, 2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
-    #   epi_llik <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T) - dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T)
-    # }
 
     prevalence[i + 1, ] <- x_sample
     birth_rate[i, ] <- b_sample
