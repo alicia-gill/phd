@@ -6,12 +6,13 @@
 \usage{
 sir_mix(
   n_particles,
-  sigma,
-  death_rate,
-  noisy_prevalence,
-  proportion_obs,
-  genetic_data,
   ess_threshold = n_particles/2,
+  x0 = 1,
+  death_rate,
+  sigma,
+  proportion_obs,
+  noisy_prevalence,
+  genetic_data,
   resampling_scheme = "systematic",
   backward_sim = TRUE
 )
@@ -19,17 +20,19 @@ sir_mix(
 \arguments{
 \item{n_particles}{number of particles used in the sampling.}
 
-\item{sigma}{standard deviation of the linear gaussian proposal for birth rates.}
+\item{ess_threshold}{threshold of ESS below which triggers resampling.}
+
+\item{x0}{prevalence on day 0.}
 
 \item{death_rate}{death rate of the epidemic.}
 
-\item{noisy_prevalence}{data frame of observed prevalence per day.}
+\item{sigma}{standard deviation of the linear gaussian proposal for birth rates.}
 
 \item{proportion_obs}{proportion of cases observed.}
 
-\item{genetic_data}{data frame of day, number of lineages and number of coalescences.}
+\item{noisy_prevalence}{data frame of observed prevalence per day.}
 
-\item{ess_threshold}{threshold of ESS below which triggers resampling.}
+\item{genetic_data}{data frame of day, number of lineages and number of coalescences.}
 
 \item{resampling_scheme}{"multinomial" or "systematic".}
 
@@ -42,5 +45,5 @@ log-likelihood
 Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Prevalence proposals are negative binomial and birth rate proposals are linear Gaussian.
 }
 \examples{
-sir_mix(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
+sir_mix(n_particles = 100, x0 = 10, death_rate = 0.1, sigma = 0.1, proportion_obs = 0.1, noisy_prevalence = noisy_prev, genetic_data = gen_data)
 }

@@ -3,12 +3,13 @@
 #' Implements an adaptive SIR algorithm and returns an approximated log-likelihood. Prevalence proposals are negative binomial and birth rate proposals are linear Gaussian.
 #'
 #' @param n_particles number of particles used in the sampling.
-#' @param sigma standard deviation of the linear gaussian proposal for birth rates.
-#' @param death_rate death rate of the epidemic.
-#' @param noisy_prevalence data frame of observed prevalence per day.
-#' @param proportion_obs proportion of cases observed.
-#' @param genetic_data data frame of day, number of lineages and number of coalescences.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
+#' @param x0 prevalence on day 0.
+#' @param death_rate death rate of the epidemic.
+#' @param sigma standard deviation of the linear gaussian proposal for birth rates.
+#' @param proportion_obs proportion of cases observed.
+#' @param noisy_prevalence data frame of observed prevalence per day.
+#' @param genetic_data data frame of day, number of lineages and number of coalescences.
 #' @param resampling_scheme "multinomial" or "systematic".
 #' @param backward_sim logical; if TRUE, uses backward simulation.
 #'
@@ -16,8 +17,8 @@
 #' @export
 #'
 #' @examples
-#' sir_mix(n_particles = 100, max_birth_rate = 1, death_rate = 0.1, noisy_prevalence = noisy_prev, proportion_obs = 0.2, genetic_data = gen_data)
-sir_mix <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion_obs, genetic_data, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE) {
+#' sir_mix(n_particles = 100, x0 = 10, death_rate = 0.1, sigma = 0.1, proportion_obs = 0.1, noisy_prevalence = noisy_prev, genetic_data = gen_data)
+sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_rate, sigma, proportion_obs, noisy_prevalence, genetic_data, resampling_scheme = "systematic", backward_sim = TRUE) {
   #N is number of days of the epidemic
   N <- nrow(noisy_prevalence) - 1
   #ancestor matrix
@@ -33,15 +34,23 @@ sir_mix <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion
   resample <- rep(NA, N)
   #ess
   particles <- rep(NA, N)
-  #zeroth day always has 1
-  prevalence[1, ] <- 1
+  #zeroth day always has x0
+  prevalence[1, ] <- x0
 
   #initialise smc likelihood approximation
   int_llik <- 0
-  #initialise x_resample to be 1
+  #initialise x_resample to be x0
   x_resample <- prevalence[1, ]
   #initial weights are equal
   logw <- rep(0, n_particles)
+
+  #q is the sample to propose according to the data
+  #if proportion_obs is 0, we want to sample entirely from the prior
+  #if proportion_obs is 1, we want to sample entirely from the data
+  #from proportion_obs>=0.2, only sample from the data
+  q <- min(0.95, proportion_obs/0.1)
+  logq <- log(q)
+  log1q <- log(1-q)
 
   for (i in 1:N) {
     #sample b
@@ -59,11 +68,6 @@ sir_mix <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion
       x_sample <- x_resample + rtskellam(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate)
       epi_llik <- 0
     } else {
-      #q is the sample to propose according to the data
-      #if proportion_obs is 0, we want to sample entirely from the prior
-      #if proportion_obs is 1, we want to sample entirely from the data
-      #from proportion_obs>=0.2, only sample from the data
-      q <- min(0.95, proportion_obs/0.1)
       #if index is 0, sample from prior
       #if index is 1, sample from data
       index <- rep(0, n_particles)
@@ -80,15 +84,15 @@ sir_mix <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion
         x_sample[index==1] <- noisy_prevalence[i+1,2] + rnbinom(n = sum_index, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
       }
       #proposal probability is (1-q)*prior + q*data
-      #epi_lik is prior / (1-q)*prior + q*data = 1 / ((1-q) + q*data/prior)
-      #epi_llik is -log((1-q) + q*data/prior)
-      lse_vector <- matrix(data = c(rep(log(1-q), n_particles), log(q) + dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T) - smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T)), ncol=2)
-      epi_llik <- rep(NA, n_particles)
+      #epi_llik is log[prior / (1-q)*prior + q*data] = log[prior] - log[(1-q)*prior + q*data] = log[prior] - logSumExp(log[1-q] + log[prior], log[q] + log[data])
+      epi_prior <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T)
+      epi_data <- dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T)
+#      epi_proposal <- apply(cbind(log1q + epi_prior, logq + epi_data), 1, matrixStats::logSumExp)
+      epi_proposal <- rep(NA, n_particles)
       for (j in 1:n_particles) {
-        epi_llik[j] <- - matrixStats::logSumExp(lse_vector[j,])
+        epi_proposal[j] <- matrixStats::logSumExp(c(log1q + epi_prior[j], logq + epi_data[j]))
       }
-      #lse_vector <- matrix(data = c(rep(log(1-q), n_particles), log(q) + dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T) - smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T)), ncol=2)
-      #epi_llik <- -apply(lse_vector, 1, matrixStats::logSumExp)
+      epi_llik <- epi_prior - epi_proposal
     }
 
     prevalence[i + 1, ] <- x_sample
@@ -101,7 +105,9 @@ sir_mix <- function(n_particles, sigma, death_rate, noisy_prevalence, proportion
       genetic_llik <- dbinom(x = genetic_data[i + 1, 3], size = choose(genetic_data[i + 1, 2], 2), prob = 1 - exp( - 2 * b_sample / x_sample), log = T)
     }
 
-    log_weights <- logw + epi_llik + genetic_llik + dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T)
+    noisy_llik <- dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T)
+
+    log_weights <- logw + epi_llik + genetic_llik + noisy_llik
 
     #if all impossible, then mission abort
     if (max(log_weights) == -Inf) {

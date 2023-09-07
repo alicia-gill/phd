@@ -2,6 +2,7 @@
 #'
 #' @param sigma0 initial value of the linear gaussian standard deviation.
 #' @param proportion_obs0 initial value of the proportion of cases observed.
+#' @param x0 prevalence on day 0.
 #' @param death_rate death rate of the epidemic.
 #' @param ptree object of class phylo.
 #' @param day number of days in the past the most recent leaf was sampled.
@@ -14,7 +15,7 @@
 #'
 #' @examples
 #' find_nopt(sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 1, noisy_prevalence = noisy_prev, print = T)
-find_nopt <- function(sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy_prevalence, resampling_scheme = "systematic", print=F) {
+find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, noisy_prevalence, resampling_scheme = "systematic", print = F) {
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
@@ -26,8 +27,8 @@ find_nopt <- function(sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy
   inv_zeta <- 1/zeta
 
   lambda_sigma <- 1/0.1 #mean of 0.1
-  alpha_pobs <- 1
-  beta_pobs <- 3
+  #alpha_pobs <- 1
+  #beta_pobs <- 3
 
   sum_noisy <- sum(noisy_prevalence[-1,2])
 
@@ -48,7 +49,7 @@ find_nopt <- function(sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy
 
   prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
 #  prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dbeta(x = p_obs_old, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
-  f_hat_old <- sir_mix(n_particles = n_particles, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
+  f_hat_old <- sir_mix(n_particles = n_particles, ess_threshold = ess_threshold, x0 = x0, death_rate = death_rate, sigma = sigma_old, proportion_obs = p_obs_old, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
 
   #need to find a good estimate of the posterior mean for sigma and p_obs
   #first 500 for burn-in
@@ -85,7 +86,7 @@ find_nopt <- function(sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy
 
     prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
 #    prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dbeta(x = p_obs_new, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
-    f_hat_new <- sir_mix(n_particles = n_particles, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
+    f_hat_new <- sir_mix(n_particles = n_particles, ess_threshold = ess_threshold, x0 = x0, death_rate = death_rate, sigma = sigma_new, proportion_obs = p_obs_new, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
@@ -152,7 +153,7 @@ find_nopt <- function(sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy
 
     prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
 #    prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dbeta(x = p_obs_new, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
-    f_hat_new <- sir_mix(n_particles = n_particles, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
+    f_hat_new <- sir_mix(n_particles = n_particles, ess_threshold = ess_threshold, x0 = x0, death_rate = death_rate, sigma = sigma_new, proportion_obs = p_obs_new, noisy_prevalence = noisy_prevalence, genetic_data = genetic_data, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)

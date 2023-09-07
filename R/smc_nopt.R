@@ -6,6 +6,7 @@
 #' @param max_time maximum number of seconds to run the algorithm for.
 #' @param sigma0 initial value of the linear gaussian standard deviation.
 #' @param proportion_obs0 initial value of the proportion of cases observed.
+#' @param x0 prevalence on day 0.
 #' @param death_rate death rate of the epidemic.
 #' @param ptree object of class phylo.
 #' @param day number of days in the past the most recent leaf was sampled.
@@ -21,7 +22,7 @@
 #'
 #' @examples
 #' smc_nopt(iter = 100000, sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
-smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, ptree, day = 0, noisy_prevalence, n_particles=NULL, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE, print=F) {
+smc_nopt <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, noisy_prevalence, n_particles = NULL, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
   sys_time <- as.numeric(Sys.time())
 
   if (is.null(n_particles)) {
@@ -86,7 +87,7 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
   #prior on p_obs is uniform(0,1) or beta(1,3)
   prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T)
 #  prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dbeta(x = p_obs_old, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
-  sir <- sir_mix(n_particles = n_particles, sigma = sigma_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
+  sir <- sir_mix(n_particles = n_particles, sigma = sigma_old, x0 = x0, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
   f_hat_old <- sir$int_llik
   b_old <- sir$birth_rate
   p_old <- sir$prevalence[,2]
@@ -127,7 +128,7 @@ smc_nopt <- function(iter, max_time=Inf, sigma0, proportion_obs0, death_rate, pt
     #step 2: compute likelihood
     prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
 #    prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dbeta(x = p_obs_new, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
-    sir <- sir_mix(n_particles = n_particles, sigma = sigma_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
+    sir <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
     f_hat_new <- sir$int_llik
     b_new <- sir$birth_rate
     p_new <- sir$prevalence[,2]

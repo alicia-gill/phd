@@ -7,6 +7,7 @@
 find_nopt(
   sigma0,
   proportion_obs0,
+  x0 = 1,
   death_rate,
   ptree,
   day = 0,
@@ -19,6 +20,8 @@ find_nopt(
 \item{sigma0}{initial value of the linear gaussian standard deviation.}
 
 \item{proportion_obs0}{initial value of the proportion of cases observed.}
+
+\item{x0}{prevalence on day 0.}
 
 \item{death_rate}{death rate of the epidemic.}
 
