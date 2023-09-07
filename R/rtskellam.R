@@ -36,7 +36,7 @@ rtskellam <- function(n, old_x, birth_rate, death_rate) {
     mu <- c(mu1, mu2)
     #truncate proposals st epidemic cannot die out
     t <- -oldx
-    for (count in 1:1000) {
+    for (count in 1:100) {
       bd <- rpois(2, mu)
       x <- bd[1] - bd[2]
       if (x>t) {
@@ -44,7 +44,7 @@ rtskellam <- function(n, old_x, birth_rate, death_rate) {
         break
       }
     }
-    if (count == 1000) {
+    if (count == 100) {
       w <- smc_skellam((t+1):(t+100), rep(oldx, 100), birth_rate[k], death_rate[l], log=T)
       w <- w - matrixStats::logSumExp(w)
       output[i] <- sample((t+1):(t+100), 1, prob=exp(w))
