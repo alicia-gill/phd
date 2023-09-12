@@ -64,8 +64,9 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
     }
 
     #sample x
+    trunc <- noisy_prevalence[i+1,2] - x_resample
     if (noisy_prevalence[i+1,2] == 0) {
-      x_sample <- x_resample + rtskellam(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate)
+      x_sample <- x_resample + rtskellam_smc(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, trunc = trunc)
       epi_llik <- 0
     } else {
       #if index is 0, sample from prior
@@ -76,11 +77,11 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
       x_sample <- rep(NA, n_particles)
       sum_index <- sum(index)
       if (sum_index == 0) {
-        x_sample <- x_resample + rtskellam(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate)
+        x_sample <- x_resample + rtskellam_smc(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, trunc = trunc)
       } else if (sum_index == n_particles) {
         x_sample <- noisy_prevalence[i+1,2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
       } else {
-        x_sample[index==0] <- x_resample[index==0] + rtskellam(n = n_particles-sum_index, old_x = x_resample[index==0], birth_rate = b_sample[index==0], death_rate = death_rate)
+        x_sample[index==0] <- x_resample[index==0] + rtskellam_smc(n = n_particles-sum_index, old_x = x_resample[index==0], birth_rate = b_sample[index==0], death_rate = death_rate, trunc = trunc[index==0])
         x_sample[index==1] <- noisy_prevalence[i+1,2] + rnbinom(n = sum_index, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
       }
       #proposal probability is (1-q)*prior + q*data
