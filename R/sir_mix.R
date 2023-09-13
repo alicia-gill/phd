@@ -89,10 +89,7 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
       epi_prior <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T)
       epi_data <- dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T)
 #      epi_proposal <- apply(cbind(log1q + epi_prior, logq + epi_data), 1, matrixStats::logSumExp)
-      epi_proposal <- rep(NA, n_particles)
-      for (j in 1:n_particles) {
-        epi_proposal[j] <- matrixStats::logSumExp(c(log1q + epi_prior[j], logq + epi_data[j]))
-      }
+      epi_proposal <- pairwise_lse(log1q + epi_prior, logq + epi_data)
       epi_llik <- epi_prior - epi_proposal
     }
 
@@ -133,14 +130,13 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
       resample[i] <- 1
       logw <- rep(0, n_particles)
       if (resampling_scheme != "multinomial" & resampling_scheme != "systematic") {
-        print("resampling scheme must be multinomial or systematic")
-        break
+        stop("resampling scheme must be multinomial or systematic")
       }
-      if (resampling_scheme == "multinomial") {
-        index <- sample(1:n_particles, n_particles, replace = T, prob = norm_weights)
-      }
-      if (resampling_scheme == "systematic") {
+      if (identical(resampling_scheme, "systematic")) {
         index <- systematic_sample_cpp(n_particles, norm_weights)
+      }
+      if (identical(resampling_scheme, "multinomial")) {
+        index <- sample(1:n_particles, n_particles, replace = T, prob = norm_weights)
       }
       anc[i,] <- index
       x_resample <- x_sample[index]
