@@ -49,9 +49,13 @@ rtskellam_smc <- function(n, old_x, birth_rate, death_rate, trunc = -old_x) {
   if (m > 0) {
     for (i in 1:m) {
       j <- index[i]
-      w <- smc_skellam(new_x = (trunc[j]+1):(trunc[j]+100), rep(old_x[j], 100), birth_rate[j], death_rate, log=T)
+      tj <- trunc[j]
+      x <- seq(from = tj+1, to = tj+100, length.out = 100)
+      w <- smc_skellam(new_x = x, rep(old_x[j], 100), birth_rate[j], death_rate, log=T)
       w <- w - matrixStats::logSumExp(w)
-      output[j] <- sample((trunc[j]+1):(trunc[j]+100), 1, prob=exp(w))
+      w <- w - matrixStats::logSumExp(w)
+      w <- w - matrixStats::logSumExp(w)
+      output[j] <- sample(x, 1, prob=exp(w))
     }
   }
 
