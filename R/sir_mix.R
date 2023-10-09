@@ -57,10 +57,17 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
     if (i == 1) {
       rate <- 1/(death_rate*2)
       b_sample <- rexp(n_particles, rate=rate)
+      b_llik <- 0
+#    } else if (i > 1 & noisy_prevalence[i+1, 2] > 0 & noisy_prevalence[i,2] > 0) {
+#      mean <- death_rate * noisy_prevalence[i+1,2] / noisy_prevalence[i,2]
+#      sd <- 1 / noisy_prevalence[i,2]
+#      b_sample <- extraDistr::rtnorm(n_particles, mean = mean, sd = sd, a = 0)
+#      b_llik <- dnorm(x = b_sample, mean = b_resample, sd = sigma, log = T) - extraDistr::dtnorm(x = b_sample, mean = mean, sd = sd, a = 0, log = T)
     } else {
       b_sample <- rnorm(n_particles, mean = b_resample, sd = sigma)
       #reflect off 0
       b_sample <- abs(b_sample)
+      b_llik <- 0
     }
 
     #sample x
@@ -105,7 +112,7 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
 
     noisy_llik <- dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T)
 
-    log_weights <- logw + epi_llik + genetic_llik + noisy_llik
+    log_weights <- logw + b_llik + epi_llik + genetic_llik + noisy_llik
 
     #if all impossible, then mission abort
     if (max(log_weights) == -Inf) {
