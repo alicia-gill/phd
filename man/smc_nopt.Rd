@@ -13,6 +13,7 @@ smc_nopt(
   death_rate,
   ptree,
   day = 0,
+  genetic_data = NULL,
   noisy_prevalence,
   n_particles = NULL,
   ess_threshold = n_particles/2,
