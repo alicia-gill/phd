@@ -22,7 +22,7 @@
 #'
 #' @examples
 #' smc_nopt(iter = 100000, sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
-smc_nopt <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, noisy_prevalence, n_particles = NULL, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
+smc_nopt <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, genetic_data = NULL, noisy_prevalence, n_particles = NULL, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
   sys_time <- as.numeric(Sys.time())
 
   if (is.null(n_particles)) {
@@ -36,7 +36,9 @@ smc_nopt <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, deat
 
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
-  genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
+  if (is.null(genetic_data)) {
+    genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
+  }
 
   b_matrix <- matrix(NA, nrow=iter, ncol=stop_time)
   p_matrix <- matrix(NA, nrow=iter, ncol=stop_time+1)
