@@ -74,7 +74,14 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
     trunc <- noisy_prevalence[i+1,2] - x_resample
     if (noisy_prevalence[i+1,2] == 0) {
       x_sample <- x_resample + rtskellam_smc(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, trunc = trunc)
-      epi_llik <- 0
+      min_x <- min(x_sample)
+      if (min_x <= 0) {
+        epi_llik <- rep(0, n_particles)
+        index <- which(x_sample <= 0)
+        epi_llik[index] <- -Inf
+      } else {
+        epi_llik <- 0
+      }
     } else {
       #if index is 0, sample from prior
       #if index is 1, sample from data
@@ -133,7 +140,7 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
     ess <- 1 / sum(norm_weights^2)
     particles[i] <- ess
     #if the ess is below threshold, then resample
-    if (ess <= ess_threshold) {
+    if (ess <= ess_threshold | min(log_weights) == 0) {
       resample[i] <- 1
       logw <- rep(0, n_particles)
       if (resampling_scheme != "multinomial" & resampling_scheme != "systematic") {
