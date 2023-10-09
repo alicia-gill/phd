@@ -77,8 +77,7 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
       min_x <- min(x_sample)
       if (min_x <= 0) {
         epi_llik <- rep(0, n_particles)
-        index <- which(x_sample <= 0)
-        epi_llik[index] <- -Inf
+        epi_llik[x_sample <= 0] <- -Inf
       } else {
         epi_llik <- 0
       }
@@ -140,7 +139,7 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
     ess <- 1 / sum(norm_weights^2)
     particles[i] <- ess
     #if the ess is below threshold, then resample
-    if (ess <= ess_threshold | min(log_weights) == 0) {
+    if (ess <= ess_threshold | min(log_weights) == -Inf) {
       resample[i] <- 1
       logw <- rep(0, n_particles)
       if (resampling_scheme != "multinomial" & resampling_scheme != "systematic") {
