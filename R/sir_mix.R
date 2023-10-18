@@ -191,5 +191,5 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
     }
   }
 
-  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p, "ancestor"=anc, "weights"=normweights, "br_matrix"=birth_rate, "prev_matrix"=prevalence))
+  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p, "ancestor"=anc, "weights"=normweights, "br_matrix"=birth_rate, "prev_matrix"=prevalence, "ess"=particles))
 }
