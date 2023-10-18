@@ -21,12 +21,12 @@ plot_birthrates <- function(chain, q=0.95, burn_in=0) {
   }
   lq <- (1-q)/2
   uq <- 1-lq
-  min <- min(matrixStats::colQuantiles(birth_rates, probs=lq))
-  max <- max(matrixStats::colQuantiles(birth_rates, probs=uq))
+  min <- min(matrixStats::colQuantiles(birth_rates, probs=lq, na.rm=T))
+  max <- max(matrixStats::colQuantiles(birth_rates, probs=uq, na.rm=T))
   par(mar=c(4,4,1.5,1.5))
-  plot(apply(birth_rates, 2, mean), type="l", ylim=c(min,max), xlab="Day", ylab="B(t)")
-  lines(matrixStats::colQuantiles(birth_rates, probs=lq), col="blue")
-  lines(matrixStats::colQuantiles(birth_rates, probs=uq), col="blue")
+  plot(apply(birth_rates, 2, mean, na.rm=T), type="l", ylim=c(min,max), xlab="Day", ylab="B(t)")
+  lines(matrixStats::colQuantiles(birth_rates, probs=lq, na.rm=T), col="blue")
+  lines(matrixStats::colQuantiles(birth_rates, probs=uq, na.rm=T), col="blue")
 }
 
 #' @rdname plot_fns
@@ -39,12 +39,12 @@ plot_rt <- function(chain, death_rate, q=0.95, burn_in=0) {
   }
   lq <- (1-q)/2
   uq <- 1-lq
-  min <- min(matrixStats::colQuantiles(rt, probs=lq))
-  max <- max(matrixStats::colQuantiles(rt, probs=uq))
+  min <- min(matrixStats::colQuantiles(rt, probs=lq, na.rm=T))
+  max <- max(matrixStats::colQuantiles(rt, probs=uq, na.rm=T))
   par(mar=c(4,4,1.5,1.5))
-  plot(apply(rt, 2, mean), type="l", ylim=c(min,max), xlab="Day", ylab="R(t)")
-  lines(matrixStats::colQuantiles(rt, probs=lq), col="blue")
-  lines(matrixStats::colQuantiles(rt, probs=uq), col="blue")
+  plot(apply(rt, 2, mean, na.rm=T), type="l", ylim=c(min,max), xlab="Day", ylab="R(t)")
+  lines(matrixStats::colQuantiles(rt, probs=lq, na.rm=T), col="blue")
+  lines(matrixStats::colQuantiles(rt, probs=uq, na.rm=T), col="blue")
 }
 
 #' @rdname plot_fns
@@ -58,12 +58,12 @@ plot_prevalence <- function(chain, q=0.95, burn_in=0) {
   lq <- (1-q)/2
   uq <- 1-lq
   min <- 0
-  max <- max(matrixStats::colQuantiles(prevalence, probs=uq))
+  max <- max(matrixStats::colQuantiles(prevalence, probs=uq, na.rm=T))
   n <- ncol(prevalence)-1
   par(mar=c(4,4,1.5,1.5))
-  plot(0:n, apply(prevalence, 2, mean), type="l", ylim=c(min,max), xlab="Day", ylab="Prevalence")
-  lines(0:n, matrixStats::colQuantiles(prevalence, probs=lq), col="blue")
-  lines(0:n, matrixStats::colQuantiles(prevalence, probs=uq), col="blue")
+  plot(0:n, apply(prevalence, 2, mean, na.rm=T), type="l", ylim=c(min,max), xlab="Day", ylab="Prevalence")
+  lines(0:n, matrixStats::colQuantiles(prevalence, probs=lq, na.rm=T), col="blue")
+  lines(0:n, matrixStats::colQuantiles(prevalence, probs=uq, na.rm=T), col="blue")
 }
 
 #' @rdname plot_fns
@@ -71,11 +71,11 @@ plot_prevalence <- function(chain, q=0.95, burn_in=0) {
 plot_pobs <- function(chain, burn_in=0) {
   pobs <- chain$proportion_obs
   if (burn_in > 0) {
-    min <- min(pobs[-(1:burn_in)])
-    max <- max(pobs[-(1:burn_in)])
+    min <- min(pobs[-(1:burn_in)], na.rm=T)
+    max <- max(pobs[-(1:burn_in)], na.rm=T)
   } else {
-    min <- min(pobs)
-    max <- max(pobs)
+    min <- min(pobs, na.rm=T)
+    max <- max(pobs, na.rm=T)
   }
   iter <- length(pobs)
   par(mar=c(4,4,1.5,1.5))
@@ -90,15 +90,34 @@ plot_pobs <- function(chain, burn_in=0) {
 plot_sigma <- function(chain, burn_in=0) {
   sigma <- chain$sigma
   if (burn_in > 0) {
-    min <- min(sigma[-(1:burn_in)])
-    max <- max(sigma[-(1:burn_in)])
+    min <- min(sigma[-(1:burn_in)], na.rm=T)
+    max <- max(sigma[-(1:burn_in)], na.rm=T)
   } else {
-    min <- min(sigma)
-    max <- max(sigma)
+    min <- min(sigma, na.rm=T)
+    max <- max(sigma, na.rm=T)
   }
   iter <- length(sigma)
   par(mar=c(4,4,1.5,1.5))
   plot(sigma, type="l", ylim=c(min,max), xlab="Iteration", ylab="Sigma", xaxt="n")
+  at <- seq(0,iter,length.out=6)
+  labels <- as.character(format(at, scientific=F))
+  axis(1, at=at, labels=labels)
+}
+
+#' @rdname plot_fns
+#' @export
+plot_x0 <- function(chain, burn_in=0) {
+  x0 <- chain$x0
+  if (burn_in > 0) {
+    min <- min(x0[-(1:burn_in)], na.rm=T)
+    max <- max(x0[-(1:burn_in)], na.rm=T)
+  } else {
+    min <- min(x0, na.rm=T)
+    max <- max(x0, na.rm=T)
+  }
+  iter <- length(x0)
+  par(mar=c(4,4,1.5,1.5))
+  plot(x0, type="l", ylim=c(min,max), xlab="Iteration", ylab="X0", xaxt="n")
   at <- seq(0,iter,length.out=6)
   labels <- as.character(format(at, scientific=F))
   axis(1, at=at, labels=labels)
