@@ -55,35 +55,29 @@ sir_mixb <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_r
   for (i in 1:N) {
     #if there is no prev data, propose b and x|b according to priors
     #if there is prev data, propose x and b|x proportional to q and b / x|b proportional to (1-q)
-    if (noisy_prevalence[i+1,2] == 0) {
+    index <- rep(0, n_particles)
+    u <- runif(n_particles)
+    index[u <= q] <- 1
+    sum_index <- sum(index)
+    b_sample <- rep(NA, n_particles)
+    x_sample <- rep(NA, n_particles)
 
-    } else {
+    #if sum_index=0, then all samples from prior
+    if (sum_index == 0 | noisy_prevalence[i+1,2] == 0 | genetic_data[i+1,2] == 0) {
+      #sample b
+      if (i == 1) {
+        rate <- 1/(death_rate*2)
+        b_sample <- rexp(n_particles, rate=rate)
+        b_llik <- 0
+      } else {
+        b_sample <- rnorm(n_particles, mean = b_resample, sd = sigma)
+        #reflect off 0
+        b_sample <- abs(b_sample)
+        b_llik <- 0
+      }
 
-    }
-
-
-
-
-    #sample b
-    if (i == 1) {
-      rate <- 1/(death_rate*2)
-      b_sample <- rexp(n_particles, rate=rate)
-      b_llik <- 0
-      #    } else if (i > 1 & noisy_prevalence[i+1, 2] > 0 & noisy_prevalence[i,2] > 0) {
-      #      mean <- death_rate * noisy_prevalence[i+1,2] / noisy_prevalence[i,2]
-      #      sd <- 1 / noisy_prevalence[i,2]
-      #      b_sample <- extraDistr::rtnorm(n_particles, mean = mean, sd = sd, a = 0)
-      #      b_llik <- dnorm(x = b_sample, mean = b_resample, sd = sigma, log = T) - extraDistr::dtnorm(x = b_sample, mean = mean, sd = sd, a = 0, log = T)
-    } else {
-      b_sample <- rnorm(n_particles, mean = b_resample, sd = sigma)
-      #reflect off 0
-      b_sample <- abs(b_sample)
-      b_llik <- 0
-    }
-
-    #sample x
-    trunc <- noisy_prevalence[i+1,2] - x_resample
-    if (noisy_prevalence[i+1,2] == 0) {
+      #sample x
+      trunc <- noisy_prevalence[i+1,2] - x_resample
       x_sample <- x_resample + rtskellam_smc(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, trunc = trunc)
       min_x <- min(x_sample)
       if (min_x <= 0) {
@@ -92,27 +86,51 @@ sir_mixb <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_r
       } else {
         epi_llik <- 0
       }
-    } else {
-      #if index is 0, sample from prior
-      #if index is 1, sample from data
-      index <- rep(0, n_particles)
-      u <- runif(n_particles)
-      index[u <= q] <- 1
-      x_sample <- rep(NA, n_particles)
-      sum_index <- sum(index)
-      if (sum_index == 0) {
-        x_sample <- x_resample + rtskellam_smc(n = n_particles, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, trunc = trunc)
-      } else if (sum_index == n_particles) {
-        x_sample <- noisy_prevalence[i+1,2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
-      } else {
-        x_sample[index==0] <- x_resample[index==0] + rtskellam_smc(n = n_particles-sum_index, old_x = x_resample[index==0], birth_rate = b_sample[index==0], death_rate = death_rate, trunc = trunc[index==0])
-        x_sample[index==1] <- noisy_prevalence[i+1,2] + rnbinom(n = sum_index, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
-      }
+    } else if (sum_index == n_particles) {
+      #sample x
+      x_sample <- noisy_prevalence[i+1,2] + rnbinom(n = n_particles, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
+
+      #sample b
+      #mle for prob in gen_llik is x/size
+      mean <- - x_sample/2 * log(1 - genetic_data[i+1,3]/choose(genetic_data[i+1,2],2))
+      sd <- 3/choose(genetic_data[i+1,2],2)
+      b_sample <- abs(rnorm(n_particles, mean = mean, sd = sd))
+      b_prior <- dnorm(b_sample, mean = b_resample, sd = sigma, log = T)
+      b_data <- dnorm(b_sample, mean = mean, sd = sd, log = T)
+      b_proposal <- pairwise_lse(log1q + b_prior, logq + b_data)
+      b_llik <- b_prior - b_proposal
+
       #proposal probability is (1-q)*prior + q*data
       #epi_llik is log[prior / (1-q)*prior + q*data] = log[prior] - log[(1-q)*prior + q*data] = log[prior] - logSumExp(log[1-q] + log[prior], log[q] + log[data])
       epi_prior <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T)
       epi_data <- dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T)
-      #      epi_proposal <- apply(cbind(log1q + epi_prior, logq + epi_data), 1, matrixStats::logSumExp)
+      epi_proposal <- pairwise_lse(log1q + epi_prior, logq + epi_data)
+      epi_llik <- epi_prior - epi_proposal
+    } else {
+      #sample from priors
+      if (i == 1) {
+        rate <- 1/(death_rate*2)
+        b_sample[index==0] <- rexp(n = n_particles-sum_index, rate = rate)
+      } else {
+        b_sample[index==0] <- abs(rnorm(n = n_particles-sum_index, mean = b_resample[index==0], sd = sigma))
+      }
+      trunc <- noisy_prevalence[i+1,2] - x_resample
+      x_sample[index==0] <- x_resample[index==0] + rtskellam_smc(n = n_particles-sum_index, old_x = x_resample[index==0], birth_rate = b_sample[index==0], death_rate = death_rate, trunc = trunc[index==0])
+
+      #sample from data
+      x_sample[index==1] <- noisy_prevalence[i+1,2] + rnbinom(n = sum_index, size = noisy_prevalence[i + 1, 2], p = proportion_obs)
+      mean <- - x_sample[index==1]/2 * log(1 - genetic_data[i+1,3]/choose(genetic_data[i+1,2],2))
+      sd <- 3/choose(genetic_data[i+1,2],2)
+      b_sample[index==1] <- abs(rnorm(sum_index, mean = mean, sd = sd))
+
+      #proposal probability is (1-q)*prior + q*data
+      #epi_llik is log[prior / (1-q)*prior + q*data] = log[prior] - log[(1-q)*prior + q*data] = log[prior] - logSumExp(log[1-q] + log[prior], log[q] + log[data])
+      b_prior <- dnorm(b_sample, mean = b_resample, sd = sigma, log = T)
+      b_data <- dnorm(b_sample, mean = mean, sd = sd, log = T)
+      b_proposal <- pairwise_lse(log1q + b_prior, logq + b_data)
+      b_llik <- b_prior - b_proposal
+      epi_prior <- smc_skellam(new_x = x_sample, old_x = x_resample, birth_rate = b_sample, death_rate = death_rate, log = T)
+      epi_data <- dnbinom(x = x_sample - noisy_prevalence[i + 1, 2], size = noisy_prevalence[i + 1, 2], prob = proportion_obs, log = T)
       epi_proposal <- pairwise_lse(log1q + epi_prior, logq + epi_data)
       epi_llik <- epi_prior - epi_proposal
     }
@@ -175,7 +193,7 @@ sir_mixb <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_r
   }
 
   b <- rep(NA, N)
-  p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
+  p <- data.frame("day"=0:N, "prev"=rep(x0,N+1))
   if (backward_sim == TRUE) {
     jt <- rep(NA, N)
     #day N
@@ -202,5 +220,5 @@ sir_mixb <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_r
     }
   }
 
-  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p, "ancestor"=anc, "weights"=normweights, "br_matrix"=birth_rate, "prev_matrix"=prevalence))
+  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p, "ancestor"=anc, "weights"=normweights, "br_matrix"=birth_rate, "prev_matrix"=prevalence, "ess"=particles))
 }
