@@ -164,7 +164,7 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
   }
 
   b <- rep(NA, N)
-  p <- data.frame("day"=0:N, "prev"=rep(1,N+1))
+  p <- data.frame("day"=0:N, "prev"=rep(x0,N+1))
   if (backward_sim == TRUE) {
     jt <- rep(NA, N)
     #day N
