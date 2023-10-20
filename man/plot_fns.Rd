@@ -7,6 +7,7 @@
 \alias{plot_prevalence}
 \alias{plot_pobs}
 \alias{plot_sigma}
+\alias{plot_x0}
 \title{A collection of functions to plot inference from MCMC chains}
 \usage{
 plot_birthrates(chain, q = 0.95, burn_in = 0)
@@ -18,6 +19,8 @@ plot_prevalence(chain, q = 0.95, burn_in = 0)
 plot_pobs(chain, burn_in = 0)
 
 plot_sigma(chain, burn_in = 0)
+
+plot_x0(chain, burn_in = 0)
 }
 \arguments{
 \item{chain}{MCMC chain}
