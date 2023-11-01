@@ -52,6 +52,12 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
   logq <- log(q)
   log1q <- log(1-q)
 
+  #P is the first day with prevalence data
+  P <- which(noisy_prevalence[-1,2]>0)[1]
+  if (is.na(P)) {
+    P <- N + 1
+  }
+
   for (i in 1:N) {
     #sample b
     if (i == 1) {
@@ -116,7 +122,11 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
       genetic_llik <- dbinom(x = genetic_data[i + 1, 3], size = choose(genetic_data[i + 1, 2], 2), prob = 1 - exp( - 2 * b_sample / x_sample), log = T)
     }
 
-    noisy_llik <- dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T)
+    if (i < P) {
+      noisy_llik <- 0
+    } else {
+      noisy_llik <- dbinom(x = noisy_prevalence[i + 1, 2], size = x_sample, prob = proportion_obs, log = T)
+    }
 
     log_weights <- logw + b_llik + epi_llik + genetic_llik + noisy_llik
 
