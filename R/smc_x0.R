@@ -30,7 +30,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     for (i in 1:3) {
       n_particles[i] <- find_nopt(sigma0 = sigma0, proportion_obs0 = proportion_obs0, death_rate = death_rate, ptree = ptree, day = day, noisy_prevalence = noisy_prevalence, resampling_scheme = resampling_scheme)
     }
-    n_particles <- min(max(n_particles), 5000)
+    n_particles <- min(max(n_particles), 10000)
     ess_threshold <- n_particles/2
   }
 
