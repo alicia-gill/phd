@@ -10,11 +10,18 @@
 \alias{plot_x0}
 \title{A collection of functions to plot inference from MCMC chains}
 \usage{
-plot_birthrates(chain, q = 0.95, burn_in = 0)
+plot_birthrates(chain, q = 0.95, burn_in = 0, start_time = NA, end_time = NA)
 
-plot_rt(chain, death_rate, q = 0.95, burn_in = 0)
+plot_rt(
+  chain,
+  death_rate,
+  q = 0.95,
+  burn_in = 0,
+  start_time = NA,
+  end_time = NA
+)
 
-plot_prevalence(chain, q = 0.95, burn_in = 0)
+plot_prevalence(chain, q = 0.95, burn_in = 0, start_time = NA, end_time = NA)
 
 plot_pobs(chain, burn_in = 0)
 
