@@ -1,3 +1,14 @@
+#' Distance to root
+#'
+#' For each leave on the tree, calculate the distance from the leaf to the root.
+#'
+#' @param phy object of class phylo.
+#'
+#' @return vector containing distance from leaf to root.
+#' @export
+#'
+#' @examples
+#' distToRoot(ptree)
 distToRoot <- function (phy) {
   e <- rep(0,nrow(phy$edge))
   e[phy$edge[,2]] <- 1:nrow(phy$edge)
