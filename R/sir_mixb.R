@@ -131,7 +131,12 @@ sir_mixb <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_r
 
       #proposal probability is (1-q)*prior + q*data
       #epi_llik is log[prior / (1-q)*prior + q*data] = log[prior] - log[(1-q)*prior + q*data] = log[prior] - logSumExp(log[1-q] + log[prior], log[q] + log[data])
-      b_prior <- dnorm(b_sample, mean = b_resample, sd = sigma, log = T)
+      if (i == i) {
+        rate <- 1/(death_rate*2)
+        b_prior <- dexp(b_sample, rate = rate, log = T)
+      } else {
+        b_prior <- dnorm(b_sample, mean = b_resample, sd = sigma, log = T)
+      }
       b_data <- dnorm(b_sample, mean = mean, sd = sd, log = T)
       b_proposal <- pairwise_lse(log1q + b_prior, logq + b_data)
       b_llik <- b_prior - b_proposal
