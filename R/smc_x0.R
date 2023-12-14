@@ -13,6 +13,7 @@
 #' @param noisy_prevalence data frame of observed prevalence per day.
 #' @param n_particles number of particles used in the importance sampling.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
+#' @param max_n_particles upper bound on the number of particles to use in the importance sampling.
 #' @param resampling_scheme "multinomial" or "systematic".
 #' @param backward_sim logical; if TRUE, uses backward simulation.
 #' @param print logical; if TRUE, prints percentage of the way through the chain.
@@ -22,7 +23,7 @@
 #'
 #' @examples
 #' smc_x0(iter = 100000, sigma0 = 0.1, x0 = 1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
-smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, genetic_data = NULL, noisy_prevalence, n_particles = NULL, ess_threshold = n_particles/2, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
+smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, genetic_data = NULL, noisy_prevalence, n_particles = NULL, ess_threshold = n_particles/2, max_n_particles = 10000, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
   sys_time <- as.numeric(Sys.time())
 
   if (is.null(n_particles)) {
@@ -30,7 +31,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     for (i in 1:3) {
       n_particles[i] <- find_nopt(sigma0 = sigma0, proportion_obs0 = proportion_obs0, death_rate = death_rate, ptree = ptree, day = day, noisy_prevalence = noisy_prevalence, resampling_scheme = resampling_scheme)
     }
-    n_particles <- min(max(n_particles), 10000)
+    n_particles <- min(max(n_particles), max_n_particles)
     ess_threshold <- n_particles/2
   }
 
