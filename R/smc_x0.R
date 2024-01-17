@@ -112,7 +112,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     #step 1: sample sample sigma_new
     #if proposal is negative, then bounce back
     if (sum_noisy == 0) {
-      w <- rnorm(n = 1, mean = 0, sd = 1)
+      w <- rnorm(n = 1, mean = 0, sd = max(sigma0/10, 0.01))
       sigma_new <- sigma_old + exp(s) * sqrtSigma_old * w
       sigma_new <- abs(sigma_new)
       x0_new <- x0_old + extraDistr::rsign(1)
@@ -121,7 +121,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       }
       p_obs_new <- 0
     } else {
-      w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(1, nrow=2, ncol=2))
+      w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(c(max(sigma0/10, 0.01), max(proportion_obs0/10, 0.01))))
       new <- c(sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
       new <- abs(new)
       sigma_new <- new[1]
