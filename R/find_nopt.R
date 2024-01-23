@@ -90,7 +90,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
-    eta <- (i + 10)^(-0.6)
+    eta <- (i + 100)^(-0.9)
     #targeting 10% acceptance
     s <- s + (a - 0.1) * eta
     logu <- -rexp(1)
@@ -157,7 +157,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
-    eta <- (i + 10)^(-0.6)
+    eta <- (i + 100)^(-0.9)
     #targeting 10% acceptance
     s <- s + (a - 0.1) * eta
     logu <- -rexp(1)
