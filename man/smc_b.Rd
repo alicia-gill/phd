@@ -17,6 +17,7 @@ smc_b(
   noisy_prevalence,
   n_particles = NULL,
   ess_threshold = n_particles/2,
+  max_n_particles = 10000,
   resampling_scheme = "systematic",
   backward_sim = TRUE,
   print = F
@@ -44,6 +45,8 @@ smc_b(
 \item{n_particles}{number of particles used in the importance sampling.}
 
 \item{ess_threshold}{threshold of ESS below which triggers resampling.}
+
+\item{max_n_particles}{upper bound on the number of particles to use in the importance sampling.}
 
 \item{resampling_scheme}{"multinomial" or "systematic".}
 
