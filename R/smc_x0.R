@@ -121,7 +121,8 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       }
       p_obs_new <- 0
     } else {
-      w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(c(0.01, 0.01)))
+      w <- rnorm(n=2, mean=0, sd=0.01)
+#      w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(0.01, nrow=2))
       new <- c(sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
       new <- abs(new)
       sigma_new <- new[1]
