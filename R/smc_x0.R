@@ -84,7 +84,12 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     p_obs_old <- proportion_obs0
     mu_old <- c(sigma_old, p_obs_old)
     Sigma_old <- diag(1, nrow=2, ncol=2)
-    sqrtSigma_old <- expm::sqrtm(Sigma_old)
+    # sqrtSigma_old <- expm::sqrtm(Sigma_old)
+    trace <- Sigma_old[1,1] + Sigma_old[2,2]
+    det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
+    sqrtdet <- sqrt(det)
+    tt <- sqrt(trace + 2*sqrtdet)
+    sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
   }
@@ -144,20 +149,25 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     #step 2: compute likelihood
     prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T)
     #    prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dbeta(x = p_obs_new, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
-    sir <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
-    f_hat_new <- sir$int_llik
-    b_new <- sir$birth_rate
-    p_new <- sir$prevalence[,2]
+    # if (prior_new == -Inf) {
+    #   loga <- -Inf
+    #   a <- exp(loga)
+    # } else {
+      sir <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
+      f_hat_new <- sir$int_llik
+      b_new <- sir$birth_rate
+      p_new <- sir$prevalence[,2]
 
-    #step 3: compute acceptance probability
-    if (x0_old > 1) {
-      logq <- 0
-    } else {
-      logq <- -log(2)
-    }
-    logr <- prior_new + f_hat_new + logq - prior_old - f_hat_old
-    loga <- min(0,logr)
-    a <- exp(loga)
+      #step 3: compute acceptance probability
+      if (x0_old > 1) {
+        logq <- 0
+      } else {
+        logq <- -log(2)
+      }
+      logr <- prior_new + f_hat_new + logq - prior_old - f_hat_old
+      loga <- min(0,logr)
+      a <- exp(loga)
+    # }
 
     eta <- (i + 100)^(-0.9)
     #targeting 10% acceptance
@@ -191,15 +201,26 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       Xn <- c(sigma_old, p_obs_old)
       p_obs[i] <- p_obs_old
     }
-    mu_new <- (1 - eta) * mu_old + eta * Xn
-    Sigma_new <- (1 - eta) * Sigma_old + eta * (Xn - mu_old) %*% t(Xn - mu_old)
+    mu_new <- ((1 - eta) * mu_old) + (eta * Xn)
+    Sigma_new <- ((1 - eta) * Sigma_old) + (eta * (Xn - mu_old) %*% t(Xn - mu_old))
     evalues <- eigen(Sigma_new, symmetric = T)$values
+    # min_evalue <- min(evalues)
+    # max_evalue <- max(evalues)
     min_evalue <- min(evalues)*exp(s)
     max_evalue <- max(evalues)*exp(s)
     if (norm(mu_new, type="2") <= zeta & max_evalue <= zeta & min_evalue >= inv_zeta) {
       mu_old <- mu_new
       Sigma_old <- Sigma_new
-      sqrtSigma_old <- expm::sqrtm(Sigma_old)
+      # sqrtSigma_old <- expm::sqrtm(Sigma_old)
+      if (sum_noisy == 0) {
+        sqrtSigma_old <- sqrt(Sigma_old)
+      } else {
+        trace <- Sigma_old[1,1] + Sigma_old[2,2]
+        det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
+        sqrtdet <- sqrt(det)
+        tt <- sqrt(trace + 2*sqrtdet)
+        sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
+      }
     }
     mu[i+1,] <- mu_old
     Sigma[i+1,,] <- Sigma_old
