@@ -31,7 +31,9 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     for (i in 1:3) {
       n_particles[i] <- find_nopt(sigma0 = sigma0, proportion_obs0 = proportion_obs0, death_rate = death_rate, ptree = ptree, day = day, noisy_prevalence = noisy_prevalence, resampling_scheme = resampling_scheme)
     }
+    #set 1000 <= n_particles <= max_n_particles
     n_particles <- min(max(n_particles), max_n_particles)
+    n_particles <- max(n_particles, 1000)
     ess_threshold <- n_particles/2
   }
 
@@ -73,7 +75,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     Sigma <- array(NA, c(iter+1,1,1))
     p_obs_old <- 0
     mu_old <- sigma_old
-    Sigma_old <- 1
+    Sigma_old <- 0.01
     sqrtSigma_old <- sqrt(Sigma_old)
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
@@ -83,7 +85,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     Sigma <- array(NA, c(iter+1,2,2))
     p_obs_old <- proportion_obs0
     mu_old <- c(sigma_old, p_obs_old)
-    Sigma_old <- diag(1, nrow=2, ncol=2)
+    Sigma_old <- diag(0.01, nrow=2, ncol=2)
     # sqrtSigma_old <- expm::sqrtm(Sigma_old)
     trace <- Sigma_old[1,1] + Sigma_old[2,2]
     det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
@@ -117,7 +119,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     #step 1: sample sample sigma_new
     #if proposal is negative, then bounce back
     if (sum_noisy == 0) {
-      w <- rnorm(n = 1, mean = 0, sd = 0.01)
+      w <- rnorm(n = 1, mean = 0, sd = 1)
       sigma_new <- sigma_old + exp(s) * sqrtSigma_old * w
       sigma_new <- abs(sigma_new)
       x0_new <- x0_old + extraDistr::rsign(1)
@@ -126,7 +128,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       }
       p_obs_new <- 0
     } else {
-      w <- rnorm(n=2, mean=0, sd=0.01)
+      w <- rnorm(n=2, mean=0, sd=1)
 #      w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(0.01, nrow=2))
       new <- c(sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
       new <- abs(new)
