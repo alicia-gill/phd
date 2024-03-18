@@ -14,6 +14,7 @@
 #' @param n_particles number of particles used in the importance sampling.
 #' @param ess_threshold threshold of ESS below which triggers resampling.
 #' @param max_n_particles upper bound on the number of particles to use in the importance sampling.
+#' @param min_n_particles lower bound on the number of particles to use in the importance sampling.
 #' @param resampling_scheme "multinomial" or "systematic".
 #' @param backward_sim logical; if TRUE, uses backward simulation.
 #' @param print logical; if TRUE, prints percentage of the way through the chain.
@@ -171,7 +172,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       a <- exp(loga)
     # }
 
-    eta <- (i + 100)^(-0.9)
+    eta <- (i + 100)^(-0.8)
     #targeting 10% acceptance
     s <- s + (a - 0.1) * eta
 

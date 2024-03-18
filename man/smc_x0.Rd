@@ -18,6 +18,7 @@ smc_x0(
   n_particles = NULL,
   ess_threshold = n_particles/2,
   max_n_particles = 10000,
+  min_n_particles = 1000,
   resampling_scheme = "systematic",
   backward_sim = TRUE,
   print = F
@@ -47,6 +48,8 @@ smc_x0(
 \item{ess_threshold}{threshold of ESS below which triggers resampling.}
 
 \item{max_n_particles}{upper bound on the number of particles to use in the importance sampling.}
+
+\item{min_n_particles}{lower bound on the number of particles to use in the importance sampling.}
 
 \item{resampling_scheme}{"multinomial" or "systematic".}
 
