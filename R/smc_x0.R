@@ -123,10 +123,13 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       w <- rnorm(n = 1, mean = 0, sd = 1)
       sigma_new <- sigma_old + exp(s) * sqrtSigma_old * w
       sigma_new <- abs(sigma_new)
-      x0_new <- x0_old + extraDistr::rsign(1)
-      if (x0_new <= 0) {
-        x0_new <- x0_old + 1
-      }
+      w_x0 <- rnorm(n = 1, mean = 0, sd = 1)
+      x0_new <- x0_old + round(exp(s)*w_x0,0)
+      x0_new <- abs(x0_new)
+      # x0_new <- x0_old + extraDistr::rsign(1)
+      # if (x0_new <= 0) {
+      #   x0_new <- x0_old + 1
+      # }
       p_obs_new <- 0
     } else {
       w <- rnorm(n=2, mean=0, sd=1)
@@ -143,10 +146,13 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
           p_obs_new <- -p_obs_new
         }
       }
-      x0_new <- x0_old + extraDistr::rsign(1)
-      if (x0_new <= 0) {
-        x0_new <- x0_old + 1
-      }
+      w_x0 <- rnorm(n = 1, mean = 0, sd = 1)
+      x0_new <- x0_old + round(exp(s)*w_x0,0)
+      x0_new <- abs(x0_new)
+      # x0_new <- x0_old + extraDistr::rsign(1)
+      # if (x0_new <= 0) {
+      #   x0_new <- x0_old + 1
+      # }
     }
 
     #step 2: compute likelihood
@@ -162,12 +168,13 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       p_new <- sir$prevalence[,2]
 
       #step 3: compute acceptance probability
-      if (x0_old > 1) {
-        logq <- 0
-      } else {
-        logq <- -log(2)
-      }
-      logr <- prior_new + f_hat_new + logq - prior_old - f_hat_old
+      # if (x0_old > 1) {
+      #   logq <- 0
+      # } else {
+      #   logq <- -log(2)
+      # }
+      # logr <- prior_new + f_hat_new + logq - prior_old - f_hat_old
+      logr <- prior_new + f_hat_new - prior_old - f_hat_old
       loga <- min(0,logr)
       a <- exp(loga)
     # }
