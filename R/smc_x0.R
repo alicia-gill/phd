@@ -96,6 +96,8 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
   }
+  Sigma_x0 <- max(1, round(x0_old/10,0))
+  sqrtSigma_x0 <- sqrt(Sigma_x0)
 
   #prior on sigma is exponential
   #prior on x0-1 is uniform(1,Inf)
@@ -124,7 +126,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       sigma_new <- sigma_old + exp(s) * sqrtSigma_old * w
       sigma_new <- abs(sigma_new)
       w_x0 <- rnorm(n = 1, mean = 0, sd = 1)
-      x0_new <- x0_old + round(exp(s)*w_x0,0)
+      x0_new <- x0_old + round(exp(s) * sqrtSigma_x0 * w_x0, 0)
       x0_new <- abs(x0_new)
       # x0_new <- x0_old + extraDistr::rsign(1)
       # if (x0_new <= 0) {
@@ -147,7 +149,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
         }
       }
       w_x0 <- rnorm(n = 1, mean = 0, sd = 1)
-      x0_new <- x0_old + round(exp(s)*w_x0,0)
+      x0_new <- x0_old + round(exp(s) * sqrtSigma_x0 * w_x0, 0)
       x0_new <- abs(x0_new)
       # x0_new <- x0_old + extraDistr::rsign(1)
       # if (x0_new <= 0) {
