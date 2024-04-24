@@ -152,9 +152,9 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       x0_new <- x0_old + round(exp(s) * sqrtSigma_x0 * w_x0, 0)
       x0_new <- abs(x0_new)
       # x0_new <- x0_old + extraDistr::rsign(1)
-      # if (x0_new <= 0) {
-      #   x0_new <- x0_old + 1
-      # }
+      if (x0_new == 0) {
+        x0_new <- 1
+      }
     }
 
     #step 2: compute likelihood
