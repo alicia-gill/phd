@@ -104,7 +104,7 @@ plot_prevalence <- function(chain, q=0.95, burn_in=0, start_time=NA, end_time=NA
 
 #' @rdname plot_fns
 #' @export
-plot_pobs <- function(chain, burn_in=0) {
+plot_pobs <- function(chain, burn_in=0, iter=NA) {
   pobs <- chain$proportion_obs
   if (burn_in > 0) {
     min <- min(pobs[-(1:burn_in)], na.rm=T)
@@ -113,9 +113,13 @@ plot_pobs <- function(chain, burn_in=0) {
     min <- min(pobs, na.rm=T)
     max <- max(pobs, na.rm=T)
   }
-  iter <- length(pobs)
+  if (is.na(iter)) {
+    which_max <- which.max(is.na(chain$sigma))-1
+    iter <- ifelse(which_max==0, length(pobs), which_max)
+    iter <- 5*ceiling(iter/5)
+  }
   par(mar=c(4,4,1.5,1.5))
-  plot(pobs, type="l", ylim=c(min,max), xlab="Iteration", ylab="Reporting probability", xaxt="n")
+  plot(pobs, type="l", xlim=c(0,iter), ylim=c(min,max), xlab="Iteration", ylab="Reporting probability", xaxt="n")
   at <- seq(0,iter,length.out=6)
   labels <- as.character(format(at, scientific=F))
   axis(1, at=at, labels=labels)
@@ -123,7 +127,7 @@ plot_pobs <- function(chain, burn_in=0) {
 
 #' @rdname plot_fns
 #' @export
-plot_sigma <- function(chain, burn_in=0) {
+plot_sigma <- function(chain, burn_in=0, iter=NA) {
   sigma <- chain$sigma
   if (burn_in > 0) {
     min <- min(sigma[-(1:burn_in)], na.rm=T)
@@ -132,9 +136,13 @@ plot_sigma <- function(chain, burn_in=0) {
     min <- min(sigma, na.rm=T)
     max <- max(sigma, na.rm=T)
   }
-  iter <- length(sigma)
+  if (is.na(iter)) {
+    which_max <- which.max(is.na(sigma))-1
+    iter <- ifelse(which_max==0, length(sigma), which_max)
+    iter <- 5*ceiling(iter/5)
+  }
   par(mar=c(4,4,1.5,1.5))
-  plot(sigma, type="l", ylim=c(min,max), xlab="Iteration", ylab="Sigma", xaxt="n")
+  plot(sigma, type="l", xlim=c(0,iter), ylim=c(min,max), xlab="Iteration", ylab="Sigma", xaxt="n")
   at <- seq(0,iter,length.out=6)
   labels <- as.character(format(at, scientific=F))
   axis(1, at=at, labels=labels)
@@ -142,7 +150,7 @@ plot_sigma <- function(chain, burn_in=0) {
 
 #' @rdname plot_fns
 #' @export
-plot_x0 <- function(chain, burn_in=0) {
+plot_x0 <- function(chain, burn_in=0, iter=NA) {
   x0 <- chain$x0
   if (burn_in > 0) {
     min <- min(x0[-(1:burn_in)], na.rm=T)
@@ -151,9 +159,13 @@ plot_x0 <- function(chain, burn_in=0) {
     min <- min(x0, na.rm=T)
     max <- max(x0, na.rm=T)
   }
-  iter <- length(x0)
+  if (is.na(iter)) {
+    which_max <- which.max(is.na(x0))-1
+    iter <- ifelse(which_max==0, length(x0), which_max)
+    iter <- 5*ceiling(iter/5)
+  }
   par(mar=c(4,4,1.5,1.5))
-  plot(x0, type="l", ylim=c(min,max), xlab="Iteration", ylab="X0", xaxt="n")
+  plot(x0, type="l", xlim=c(0,iter), ylim=c(min,max), xlab="Iteration", ylab="X0", xaxt="n")
   at <- seq(0,iter,length.out=6)
   labels <- as.character(format(at, scientific=F))
   axis(1, at=at, labels=labels)
