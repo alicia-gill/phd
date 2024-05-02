@@ -27,6 +27,7 @@
 smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, genetic_data = NULL, noisy_prevalence, n_particles = NULL, ess_threshold = n_particles/2, max_n_particles = 10000, min_n_particles = 1000, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
   sys_time <- as.numeric(Sys.time())
 
+  #if the number of particles is not specified, use find_nopt to choose
   if (is.null(n_particles)) {
     n_particles <- rep(NA, 3)
     for (i in 1:3) {
@@ -38,12 +39,16 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     ess_threshold <- n_particles/2
   }
 
+  #prevalence goes on one day longer than epidemic
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
+
+  #if genetic_data is not specified, calculate it from the tree
   if (is.null(genetic_data)) {
     genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
   }
 
+  #initialise output
   b_matrix <- matrix(NA, nrow=iter, ncol=stop_time)
   p_matrix <- matrix(NA, nrow=iter, ncol=stop_time+1)
   sigma <- rep(NA, iter)
@@ -57,6 +62,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
   sigma_old <- sigma0
   x0_old <- x0
 
+  #setup for adaptation
   s <- 0
   zeta <- 10000 #can be any constant >= 1
   inv_zeta <- 1/zeta
@@ -65,11 +71,12 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
 
   lambda_sigma <- 1/0.1 #mean of 0.1
   lambda_x0 <- 1 #mean and var of 1
-  alpha_pobs <- 1
-  beta_pobs <- 3
+  # alpha_pobs <- 1
+  # beta_pobs <- 3
 
   sum_noisy <- sum(noisy_prevalence[-1,2])
 
+  #if sum_noisy=0, then pobs=0, so there are only 2 hyperparameters
   if (sum_noisy == 0) {
     p_obs <- rep(0, iter)
     mu <- matrix(NA, nrow=iter+1, ncol=1)
@@ -96,6 +103,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
   }
+  #initial move size for x0 is 10% of initial value
   Sigma_x0 <- max(1, round(x0_old/10,0))
   sqrtSigma_x0 <- sqrt(Sigma_x0)
 
@@ -134,7 +142,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       # }
       p_obs_new <- 0
     } else {
-      w <- rnorm(n=2, mean=0, sd=1)
+      w <- rnorm(n = 2, mean = 0, sd = 1)
 #      w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(0.01, nrow=2))
       new <- c(sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
       new <- abs(new)
@@ -176,6 +184,13 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       #   logq <- -log(2)
       # }
       # logr <- prior_new + f_hat_new + logq - prior_old - f_hat_old
+      # q_x0_01 <- (pnorm(q=x0_new+0.5, mean=x0_old, sd=exp(s)*sqrtSigma_x0) - pnorm(q=x0_new-0.5, mean=x0_old, sd=exp(s)*sqrtSigma_x0)) +
+      #         (pnorm(q=-x0_new+0.5, mean=x0_old, sd=exp(s)*sqrtSigma_x0) - pnorm(q=-x0_new-0.5, mean=x0_old, sd=exp(s)*sqrtSigma_x0))
+      # q_x0_10 <- (pnorm(q=x0_old+0.5, mean=x0_new, sd=exp(s)*sqrtSigma_x0) - pnorm(q=x0_old-0.5, mean=x0_new, sd=exp(s)*sqrtSigma_x0)) +
+      #   (pnorm(q=-x0_old+0.5, mean=x0_new, sd=exp(s)*sqrtSigma_x0) - pnorm(q=-x0_old-0.5, mean=x0_new, sd=exp(s)*sqrtSigma_x0))
+      # logq_x0_01 <- log(q_x0_01)
+      # logq_x0_10 <- log(q_x0_10)
+      # logr <- prior_new + f_hat_new + logq_x0_10 - prior_old - f_hat_old - logq_x0_01
       logr <- prior_new + f_hat_new - prior_old - f_hat_old
       loga <- min(0,logr)
       a <- exp(loga)
@@ -183,7 +198,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
 
     eta <- (i + 100)^(-0.8)
     #targeting 10% acceptance
-    s <- s + (a - 0.1) * eta
+    s <- s + (a - 0.15) * eta
 
     scale[i+1] <- s
 
