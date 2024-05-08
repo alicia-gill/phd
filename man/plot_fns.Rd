@@ -23,11 +23,11 @@ plot_rt(
 
 plot_prevalence(chain, q = 0.95, burn_in = 0, start_time = NA, end_time = NA)
 
-plot_pobs(chain, burn_in = 0)
+plot_pobs(chain, burn_in = 0, iter = NA)
 
-plot_sigma(chain, burn_in = 0)
+plot_sigma(chain, burn_in = 0, iter = NA)
 
-plot_x0(chain, burn_in = 0)
+plot_x0(chain, burn_in = 0, iter = NA)
 }
 \arguments{
 \item{chain}{MCMC chain}
