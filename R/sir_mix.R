@@ -47,8 +47,8 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
   #q is the sample to propose according to the data
   #if proportion_obs is 0, we want to sample entirely from the prior
   #if proportion_obs is 1, we want to sample entirely from the data
-  #from proportion_obs>=0.2, only sample from the data
-  q <- min(0.95, proportion_obs/0.1)
+  #from proportion_obs>=0.5, only sample from the data
+  q <- min(0.5, proportion_obs)
   logq <- log(q)
   log1q <- log(1-q)
 
