@@ -195,7 +195,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
 
     eta <- (i + 100)^(-0.8)
     #targeting 10% acceptance
-    s <- s + (a - 0.15) * eta
+    s <- s + (a - 0.1) * eta
 
     scale[i+1] <- s
 
