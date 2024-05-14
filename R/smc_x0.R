@@ -64,7 +64,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
 
   #setup for adaptation
   s <- 0
-  zeta <- 10000 #can be any constant >= 1
+  zeta <- 100000 #can be any constant >= 1
   inv_zeta <- 1/zeta
 
   scale[1] <- s
@@ -79,21 +79,11 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
   #if sum_noisy=0, then pobs=0, so there are only 2 hyperparameters
   if (sum_noisy == 0) {
     p_obs <- rep(0, iter)
-    mu <- matrix(NA, nrow=iter+1, ncol=1)
-    Sigma <- array(NA, c(iter+1,1,1))
-    p_obs_old <- 0
-    mu_old <- sigma_old
-    Sigma_old <- 0.01
-    sqrtSigma_old <- sqrt(Sigma_old)
-    mu[1,] <- mu_old
-    Sigma[1,,] <- Sigma_old
-  } else {
-    p_obs <- rep(NA, iter)
     mu <- matrix(NA, nrow=iter+1, ncol=2)
     Sigma <- array(NA, c(iter+1,2,2))
-    p_obs_old <- proportion_obs0
-    mu_old <- c(sigma_old, p_obs_old)
-    Sigma_old <- diag(0.01, nrow=2, ncol=2)
+    p_obs_old <- 0
+    mu_old <- c(sigma_old, x0_old)
+    Sigma_old <- diag(c(0.01, max(1, round(x0_old/10,0))))
     # sqrtSigma_old <- expm::sqrtm(Sigma_old)
     trace <- Sigma_old[1,1] + Sigma_old[2,2]
     det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
@@ -102,10 +92,17 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
+  } else {
+    p_obs <- rep(NA, iter)
+    mu <- matrix(NA, nrow=iter+1, ncol=3)
+    Sigma <- array(NA, c(iter+1,3,3))
+    p_obs_old <- proportion_obs0
+    mu_old <- c(sigma_old, p_obs_old, x0_old)
+    Sigma_old <- diag(c(0.01, 0.01, max(1, round(x0_old/10,0))))
+    sqrtSigma_old <- expm::sqrtm(Sigma_old)
+    mu[1,] <- mu_old
+    Sigma[1,,] <- Sigma_old
   }
-  #initial move size for x0 is 10% of initial value
-  Sigma_x0 <- max(1, round(x0_old/10,0))
-  sqrtSigma_x0 <- sqrt(Sigma_x0)
 
   #prior on sigma is exponential
   #prior on x0-1 is uniform(1,Inf)
@@ -130,24 +127,17 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     #step 1: sample sample sigma_new
     #if proposal is negative, then bounce back
     if (sum_noisy == 0) {
-      w <- rnorm(n = 1, mean = 0, sd = 1)
-      sigma_new <- sigma_old + exp(s) * sqrtSigma_old * w
-      sigma_new <- abs(sigma_new)
-      w_x0 <- rnorm(n = 1, mean = 0, sd = 1)
-      x0_new <- x0_old + round(exp(s) * sqrtSigma_x0 * w_x0, 0)
-      x0_new <- abs(x0_new-1)+1
-      # x0_new <- x0_old + extraDistr::rsign(1)
-      # if (x0_new <= 0) {
-      #   x0_new <- x0_old + 1
-      # }
+      w <- rnorm(n = 2, mean = 0, sd = 1)
+      move <- exp(s) * sqrtSigma_old %*% w
+      sigma_new <- abs(sigma_old + move[1])
+      x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
       p_obs_new <- 0
     } else {
-      w <- rnorm(n = 2, mean = 0, sd = 1)
-#      w <- MASS::mvrnorm(n = 1, mu = rep(0, 2), Sigma = diag(0.01, nrow=2))
-      new <- c(sigma_old, p_obs_old) + exp(s) * sqrtSigma_old %*% w
-      new <- abs(new)
-      sigma_new <- new[1]
-      p_obs_new <- new[2]
+      w <- rnorm(n = 3, mean = 0, sd = 1)
+      move <- exp(s) * sqrtSigma_old %*% w
+      sigma_new <- abs(sigma_old + move[1])
+      p_obs_new <- abs(p_obs_old + move[2])
+      x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
       while (p_obs_new < 0 | p_obs_new > 1) {
         if (p_obs_new > 1) {
           p_obs_new <- 1 - p_obs_new
@@ -156,10 +146,6 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
           p_obs_new <- -p_obs_new
         }
       }
-      w_x0 <- rnorm(n = 1, mean = 0, sd = 1)
-      x0_new <- x0_old + round(exp(s) * sqrtSigma_x0 * w_x0, 0)
-      x0_new <- abs(x0_new-1)+1
-      # x0_new <- x0_old + extraDistr::rsign(1)
     }
 
     #step 2: compute likelihood
@@ -220,9 +206,9 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
     smc_llik[i] <- f_hat_old
 
     if (sum_noisy == 0) {
-      Xn <- sigma_old
+      Xn <- c(sigma_old, x0_old)
     } else {
-      Xn <- c(sigma_old, p_obs_old)
+      Xn <- c(sigma_old, p_obs_old, x0_old)
       p_obs[i] <- p_obs_old
     }
     mu_new <- ((1 - eta) * mu_old) + (eta * Xn)
@@ -237,13 +223,13 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
       Sigma_old <- Sigma_new
       # sqrtSigma_old <- expm::sqrtm(Sigma_old)
       if (sum_noisy == 0) {
-        sqrtSigma_old <- sqrt(Sigma_old)
-      } else {
         trace <- Sigma_old[1,1] + Sigma_old[2,2]
         det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
         sqrtdet <- sqrt(det)
         tt <- sqrt(trace + 2*sqrtdet)
         sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
+      } else {
+        sqrtSigma_old <- expm::sqrtm(Sigma_old)
       }
     }
     mu[i+1,] <- mu_old
