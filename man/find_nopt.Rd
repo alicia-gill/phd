@@ -12,7 +12,9 @@ find_nopt(
   ptree,
   day = 0,
   noisy_prevalence,
+  ess_threshold_prop = 0.5,
   resampling_scheme = "systematic",
+  backward_sim = F,
   print = F
 )
 }
