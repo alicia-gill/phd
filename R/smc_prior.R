@@ -92,6 +92,11 @@ smc_prior <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, dea
     sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
+
+    #prior on sigma is exponential
+    #prior on x0-1 is uniform(1,Inf)
+    #prior on p_obs is uniform(0.1,1) or beta(1,3)
+    prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T)
   } else {
     p_obs <- rep(NA, iter)
     mu <- matrix(NA, nrow=iter+1, ncol=3)
@@ -102,13 +107,14 @@ smc_prior <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, dea
     sqrtSigma_old <- expm::sqrtm(Sigma_old)
     mu[1,] <- mu_old
     Sigma[1,,] <- Sigma_old
+
+    #prior on sigma is exponential
+    #prior on x0-1 is uniform(1,Inf)
+    #prior on p_obs is uniform(0.1,1) or beta(1,3)
+    prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0.1, max = 1, log = T)
+    #  prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dbeta(x = p_obs_old, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
   }
 
-  #prior on sigma is exponential
-  #prior on x0-1 is uniform(1,Inf)
-  #prior on p_obs is uniform(0.1,1) or beta(1,3)
-  prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0.1, max = 1, log = T)
-  #  prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dbeta(x = p_obs_old, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
   sir <- sir_mix(n_particles = n_particles, sigma = sigma_old, x0 = x0_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
   f_hat_old <- sir$int_llik
   b_old <- sir$birth_rate
