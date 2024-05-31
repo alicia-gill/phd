@@ -64,7 +64,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
 
   #setup for adaptation
   s <- 0
-  zeta <- 100000 #can be any constant >= 1
+  zeta <- Inf #can be any constant >= 1
   inv_zeta <- 1/zeta
 
   scale[1] <- s
