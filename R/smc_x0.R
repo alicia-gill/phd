@@ -4,6 +4,7 @@
 #'
 #' @param iter number of iterations to run the algorithm for.
 #' @param max_time maximum number of seconds to run the algorithm for.
+#' @param target_acceptance target acceptance rate.
 #' @param sigma0 initial value of the linear gaussian standard deviation.
 #' @param proportion_obs0 initial value of the proportion of cases observed.
 #' @param x0 initial value of the prevalence on day 0.
@@ -24,7 +25,7 @@
 #'
 #' @examples
 #' smc_x0(iter = 100000, sigma0 = 0.1, x0 = 1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
-smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, genetic_data = NULL, noisy_prevalence, n_particles = NULL, ess_threshold = n_particles/2, max_n_particles = 10000, min_n_particles = 1000, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
+smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, genetic_data = NULL, noisy_prevalence, n_particles = NULL, ess_threshold = n_particles/2, max_n_particles = 10000, min_n_particles = 1000, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
   sys_time <- as.numeric(Sys.time())
 
   #if the number of particles is not specified, use find_nopt to choose
@@ -181,7 +182,7 @@ smc_x0 <- function(iter, max_time = Inf, sigma0, proportion_obs0, x0 = 1, death_
 
     eta <- (i + 100)^(-0.8)
     #targeting 10% acceptance
-    s <- s + (a - 0.1) * eta
+    s <- s + (a - target_acceptance) * eta
 
     scale[i+1] <- s
 

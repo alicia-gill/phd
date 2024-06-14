@@ -7,6 +7,7 @@
 smc_x0(
   iter,
   max_time = Inf,
+  target_acceptance = 0.1,
   sigma0,
   proportion_obs0,
   x0 = 1,
@@ -28,6 +29,8 @@ smc_x0(
 \item{iter}{number of iterations to run the algorithm for.}
 
 \item{max_time}{maximum number of seconds to run the algorithm for.}
+
+\item{target_acceptance}{target acceptance rate.}
 
 \item{sigma0}{initial value of the linear gaussian standard deviation.}
 
