@@ -25,8 +25,10 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
   anc <- matrix(nrow = N, ncol = n_particles)
   #birth rate matrix
   birth_rate <- matrix(nrow = N, ncol = n_particles)
+  birth_rate_resampled <- matrix(nrow = N, ncol = n_particles)
   #prevalence matrix: (N+1) rows to include 1 case on day 0
   prevalence <- matrix(nrow = N + 1, ncol = n_particles)
+  prevalence_resampled <- matrix(nrow = N + 1, ncol = n_particles)
   #particle weights
   normweights <- matrix(nrow = N, ncol = n_particles)
   logweights <- matrix(nrow = N, ncol = n_particles)
@@ -36,6 +38,7 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
   particles <- rep(NA, N)
   #zeroth day always has x0
   prevalence[1, ] <- x0
+  prevalence_resampled[1,] <- x0
 
   #initialise smc likelihood approximation
   int_llik <- 0
@@ -172,6 +175,9 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
       x_resample <- x_sample
       b_resample <- b_sample
     }
+
+    birth_rate_resampled[i,] <- b_resample
+    prevalence_resampled[i+1,] <- x_resample
   }
 
   b <- rep(NA, N)
@@ -202,5 +208,5 @@ sir_mix <- function(n_particles, ess_threshold = n_particles/2, x0 = 1, death_ra
     }
   }
 
-  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p, "ancestor"=anc, "weights"=normweights, "br_matrix"=birth_rate, "prev_matrix"=prevalence, "ess"=particles))
+  return(list("int_llik"=int_llik, "birth_rate"=b, "prevalence"=p, "ancestor"=anc, "weights"=normweights, "br_matrix"=birth_rate, "br_matrix_resamp"=birth_rate_resampled, "prev_matrix"=prevalence, "prev_matrix_resamp"=prevalence_resampled, "ess"=particles))
 }
