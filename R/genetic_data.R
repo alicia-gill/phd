@@ -34,6 +34,8 @@ genetic_data <- function(ptree, stop_time, day = 0) {
     ltt$N <- c(ltt$N, 0)
   }
 
+  ltt$time <- round(ltt$time, 10)
+
   #number of lineages through time
   for (i in 1:l) {
     #the first occasion where ltt$time is larger than t[i]
