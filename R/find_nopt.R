@@ -7,6 +7,17 @@
 #' @param ptree object of class phylo.
 #' @param day number of days in the past the most recent leaf was sampled.
 #' @param noisy_prevalence data frame of observed prevalence per day.
+#' @param sigma_mean exponential prior mean of sigma.
+#' @param pobs_prior "uniform" or "beta"; prior distribution on reporting probability.
+#' @param pobs_min minimum for uniform reporting probability prior.
+#' @param pobs_max maximum for uniform reporting probability prior.
+#' @param pobs_alpha shape1 for beta reporting probability prior.
+#' @param pobs_beta shape2 for beta reporting probability prior.
+#' @param x0_prior "uniform" or "nbinom"; prior distribution on day 0 prevalence.
+#' @param x0_min minimum for uniform day 0 prevalence prior.
+#' @param x0_max maximum for uniform day 0 prevalence prior.
+#' @param x0_mean mean for negative binomial day 0 prevalence prior.
+#' @param x0_var variance for negative binomial day 0 prevalence prior.
 #' @param resampling_scheme "multinomial" or "systematic".
 #' @param print logical; if TRUE, prints percentage of the way through the chain.
 #'
@@ -15,7 +26,7 @@
 #'
 #' @examples
 #' find_nopt(sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 1, noisy_prevalence = noisy_prev, print = T)
-find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, noisy_prevalence, ess_threshold_prop = 0.5, resampling_scheme = "systematic", backward_sim = F, print = F) {
+find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, noisy_prevalence, sigma_mean = 0.1, pobs_prior = "uniform", pobs_min = 0, pobs_max = 1, pobs_alpha = 1, pobs_beta = 1, x0_prior = "uniform", x0_min=1, x0_max=Inf, x0_mean=10, x0_var=100, ess_threshold_prop = 0.5, resampling_scheme = "systematic", print = F) {
   n <- nrow(noisy_prevalence)
   stop_time <- n - 1
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
@@ -27,11 +38,6 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
   s <- 0
   # zeta <- Inf #can be any constant >= 1
   # inv_zeta <- 1/zeta
-
-  lambda_sigma <- 1/0.1 #mean of 0.1
-  lambda_x0 <- 1 #mean and var of 1
-  # alpha_pobs <- 1
-  # beta_pobs <- 3
 
   sum_noisy <- sum(noisy_prevalence[-1,2])
 
@@ -59,8 +65,28 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
   #prior on sigma is exponential
   #prior on x0-1 is uniform(1,Inf)
   #prior on p_obs is uniform(0,1) or beta(1,3)
-  prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dunif(x = p_obs_old, min = 0, max = 1, log = T) #+ dunif(x = x0_old, min = 1, max = Inf, log = T)
-  #  prior_old <- dexp(x = sigma_old, rate = lambda_sigma, log = T) + dbeta(x = p_obs_old, shape1 = alpha_pobs, shape2 = beta_pobs, log = T)
+  sigma_prior_old <- dexp(x = sigma_old, rate = sigma_mean, log = T)
+  if (pobs_prior == "uniform") {
+    pobs_prior_old <- dunif(x = p_obs_old, min = pobs_min, max = pobs_max, log = T)
+  } else if (pobs_prior == "beta") {
+    pobs_prior_old <- dbeta(x = p_obd_ols, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
+  } else {
+    stop("Reporting probability prior should be 'uniform' or 'beta'")
+  }
+  if (x0_prior == "uniform") {
+    if (x0_max <= 1e300) {
+      x0_prior_old <- dunif(x = x0_old, min = x0_min, max = x0_max, log = T)
+    } else {
+      x0_prior_old <- 0
+    }
+  } else if (x0_prior == "nbinom") {
+    p_nb <- x0_mean / x0_var
+    n_nb <- x0_mean * p_nb / (1-p_nb)
+    x0_prior_old <- dnbinom(x = x0_old, size = n_nb, prob = p_nb, log = T)
+  } else {
+    stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
+  }
+  prior_old <- sigma_prior_old + pobs_prior_old + x0_prior_old
   f_hat_old <- sir_mix(n_particles = n_particles, sigma = sigma_old, x0 = x0_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)$int_llik
 
   #need to find a good estimate of the posterior mean for sigma and p_obs
@@ -97,7 +123,28 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       }
     }
 
-    prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T) #+ dunif(x = x0_new, min = 1, max = 10000, log = T)
+    sigma_prior_new <- dexp(x = sigma_new, rate = sigma_mean, log = T)
+    if (pobs_prior == "uniform") {
+      pobs_prior_new <- dunif(x = p_obs_new, min = pobs_min, max = pobs_max, log = T)
+    } else if (pobs_prior == "beta") {
+      pobs_prior_new <- dbeta(x = p_obd_ols, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
+    } else {
+      stop("Reporting probability prior should be 'uniform' or 'beta'")
+    }
+    if (x0_prior == "uniform") {
+      if (x0_max <= 1e300) {
+        x0_prior_new <- dunif(x = x0_new, min = x0_min, max = x0_max, log = T)
+      } else {
+        x0_prior_new <- 0
+      }
+    } else if (x0_prior == "nbinom") {
+      p_nb <- x0_mean / x0_var
+      n_nb <- x0_mean * p_nb / (1-p_nb)
+      x0_prior_new <- dnbinom(x = x0_new, size = n_nb, prob = p_nb, log = T)
+    } else {
+      stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
+    }
+    prior_new <- sigma_prior_new + pobs_prior_new + x0_prior_new
     f_hat_new <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)$int_llik
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
@@ -168,7 +215,28 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       }
     }
 
-    prior_new <- dexp(x = sigma_new, rate = lambda_sigma, log = T) + dunif(x = p_obs_new, min = 0, max = 1, log = T) #+ dunif(x = x0_new, min = 1, max = 10000, log = T)
+    sigma_prior_new <- dexp(x = sigma_new, rate = sigma_mean, log = T)
+    if (pobs_prior == "uniform") {
+      pobs_prior_new <- dunif(x = p_obs_new, min = pobs_min, max = pobs_max, log = T)
+    } else if (pobs_prior == "beta") {
+      pobs_prior_new <- dbeta(x = p_obd_ols, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
+    } else {
+      stop("Reporting probability prior should be 'uniform' or 'beta'")
+    }
+    if (x0_prior == "uniform") {
+      if (x0_max <= 1e300) {
+        x0_prior_new <- dunif(x = x0_new, min = x0_min, max = x0_max, log = T)
+      } else {
+        x0_prior_new <- 0
+      }
+    } else if (x0_prior == "nbinom") {
+      p_nb <- x0_mean / x0_var
+      n_nb <- x0_mean * p_nb / (1-p_nb)
+      x0_prior_new <- dnbinom(x = x0_new, size = n_nb, prob = p_nb, log = T)
+    } else {
+      stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
+    }
+    prior_new <- sigma_prior_new + pobs_prior_new + x0_prior_new
     f_hat_new <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)$int_llik
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
@@ -216,7 +284,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     if (print == T) {
       print(r)
     }
-    nopt_llik[r] <- sir_mix(n_particles = Ns, x0 = min(1, round(x0_mean,0)), sigma = sigma_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns*ess_threshold_prop, resampling_scheme = resampling_scheme, backward_sim = backward_sim)$int_llik
+    nopt_llik[r] <- sir_mix(n_particles = Ns, x0 = min(1, round(x0_mean,0)), sigma = sigma_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns*ess_threshold_prop, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
   }
   var <- sum(nopt_llik^2)/R - mean(nopt_llik)^2
   Nopt <- ceiling(Ns * (var) / (0.92^2))

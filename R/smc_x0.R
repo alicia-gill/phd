@@ -37,14 +37,14 @@
 #'
 #' @examples
 #' smc_x0(iter = 100000, sigma0 = 0.1, x0 = 1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 0, noisy_prevalence = noisy_prev, print = T)
-smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, genetic_data = NULL, noisy_prevalence, sigma_mean = 0.1, pobs_prior = "uniform", pobs_min = 0, pobs_max = 1, pobs_alpha = 1, pobs_beta = 1, x0_prior = "uniform", x0_min=1, x0_max=Inf, x0_mean=10, x0_var=100, n_particles = NULL, ess_threshold = n_particles/2, max_n_particles = 10000, min_n_particles = 1000, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
+smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, genetic_data = NULL, noisy_prevalence, sigma_mean = 0.1, pobs_prior = "uniform", pobs_min = 0, pobs_max = 1, pobs_alpha = 1, pobs_beta = 1, x0_prior = "uniform", x0_min=1, x0_max=Inf, x0_mean=10, x0_var=100, n_particles = NULL, ess_threshold = n_particles/2, min_n_particles = 1000, max_n_particles = 10000, resampling_scheme = "systematic", backward_sim = TRUE, print = F) {
   sys_time <- as.numeric(Sys.time())
 
   #if the number of particles is not specified, use find_nopt to choose
   if (is.null(n_particles)) {
     n_particles <- rep(NA, 3)
     for (i in 1:3) {
-      n_particles[i] <- find_nopt(sigma0 = sigma0, proportion_obs0 = proportion_obs0, death_rate = death_rate, ptree = ptree, day = day, noisy_prevalence = noisy_prevalence, resampling_scheme = resampling_scheme)
+      n_particles[i] <- find_nopt(sigma0 = sigma0, proportion_obs0 = proportion_obs0, death_rate = death_rate, ptree = ptree, day = day, noisy_prevalence = noisy_prevalence, sigma_mean = sigma_mean, pobs_prior = pobs_prior, pobs_min = pobs_min, pobs_max = pobs_max, pobs_alpha = pobs_alpha, pobs_beta = pobs_beta, x0_prior = x0_prior, x0_min = x0_min, x0_max = x0_max, x0_mean = x0_mean, x0_var = x0_var, resampling_scheme = resampling_scheme)
     }
     #set 1000 <= n_particles <= max_n_particles
     n_particles <- min(max(n_particles), max_n_particles)

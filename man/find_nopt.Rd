@@ -12,9 +12,19 @@ find_nopt(
   ptree,
   day = 0,
   noisy_prevalence,
+  sigma_mean = 0.1,
+  pobs_prior = "uniform",
+  pobs_min = 0,
+  pobs_max = 1,
+  pobs_alpha = 1,
+  pobs_beta = 1,
+  x0_prior = "uniform",
+  x0_min = 1,
+  x0_max = Inf,
+  x0_mean = 10,
+  x0_var = 100,
   ess_threshold_prop = 0.5,
   resampling_scheme = "systematic",
-  backward_sim = F,
   print = F
 )
 }
@@ -32,6 +42,28 @@ find_nopt(
 \item{day}{number of days in the past the most recent leaf was sampled.}
 
 \item{noisy_prevalence}{data frame of observed prevalence per day.}
+
+\item{sigma_mean}{exponential prior mean of sigma.}
+
+\item{pobs_prior}{"uniform" or "beta"; prior distribution on reporting probability.}
+
+\item{pobs_min}{minimum for uniform reporting probability prior.}
+
+\item{pobs_max}{maximum for uniform reporting probability prior.}
+
+\item{pobs_alpha}{shape1 for beta reporting probability prior.}
+
+\item{pobs_beta}{shape2 for beta reporting probability prior.}
+
+\item{x0_prior}{"uniform" or "nbinom"; prior distribution on day 0 prevalence.}
+
+\item{x0_min}{minimum for uniform day 0 prevalence prior.}
+
+\item{x0_max}{maximum for uniform day 0 prevalence prior.}
+
+\item{x0_mean}{mean for negative binomial day 0 prevalence prior.}
+
+\item{x0_var}{variance for negative binomial day 0 prevalence prior.}
 
 \item{resampling_scheme}{"multinomial" or "systematic".}
 
