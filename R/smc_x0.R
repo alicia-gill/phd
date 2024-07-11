@@ -119,7 +119,7 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
   if (pobs_prior == "uniform") {
     pobs_prior_old <- dunif(x = p_obs_old, min = pobs_min, max = pobs_max, log = T)
   } else if (pobs_prior == "beta") {
-    pobs_prior_old <- dbeta(x = p_obd_ols, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
+    pobs_prior_old <- dbeta(x = p_obs_old, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
   } else {
     stop("Reporting probability prior should be 'uniform' or 'beta'")
   }
@@ -130,9 +130,11 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
       x0_prior_old <- 0
     }
   } else if (x0_prior == "nbinom") {
-    p_nb <- x0_mean / x0_var
-    n_nb <- x0_mean * p_nb / (1-p_nb)
-    x0_prior_old <- dnbinom(x = x0_old, size = n_nb, prob = p_nb, log = T)
+    if (x0_var <= x0_mean) {
+      stop("X0 variance must be larger than X0 mean")
+    }
+    size_nb <- x0_mean * x0_mean / (x0_var - x0_mean)
+    x0_prior_old <- dnbinom(x = x0_old, size = size_nb, mu = x0_mean, log = T)
   } else {
     stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
   }
@@ -158,14 +160,14 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
       w <- rnorm(n = 2, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
-      x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
+      x0_new <- abs(x0_old + max(1, round(move[2], 0)) - 1) + 1
       p_obs_new <- 0
     } else {
       w <- rnorm(n = 3, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
       p_obs_new <- abs(p_obs_old + move[2])
-      x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
+      x0_new <- abs(x0_old + max(1, round(move[3], 0)) - 1) + 1
       while (p_obs_new < 0 | p_obs_new > 1) {
         if (p_obs_new > 1) {
           p_obs_new <- 1 - p_obs_new
@@ -181,7 +183,7 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
     if (pobs_prior == "uniform") {
       pobs_prior_new <- dunif(x = p_obs_new, min = pobs_min, max = pobs_max, log = T)
     } else if (pobs_prior == "beta") {
-      pobs_prior_new <- dbeta(x = p_obd_ols, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
+      pobs_prior_new <- dbeta(x = p_obs_old, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
     } else {
       stop("Reporting probability prior should be 'uniform' or 'beta'")
     }
@@ -192,14 +194,12 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
         x0_prior_new <- 0
       }
     } else if (x0_prior == "nbinom") {
-      p_nb <- x0_mean / x0_var
-      n_nb <- x0_mean * p_nb / (1-p_nb)
-      x0_prior_new <- dnbinom(x = x0_new, size = n_nb, prob = p_nb, log = T)
+      x0_prior_new <- dnbinom(x = x0_new, size = size_nb, mu = x0_mean, log = T)
     } else {
       stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
     }
     prior_new <- sigma_prior_new + pobs_prior_new + x0_prior_new
-    sir <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshnew = ess_threshnew, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
+    sir <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)
     f_hat_new <- sir$int_llik
     b_new <- sir$birth_rate
     p_new <- sir$prevalence[,2]

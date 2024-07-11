@@ -80,9 +80,11 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       x0_prior_old <- 0
     }
   } else if (x0_prior == "nbinom") {
-    p_nb <- x0_mean / x0_var
-    n_nb <- x0_mean * p_nb / (1-p_nb)
-    x0_prior_old <- dnbinom(x = x0_old, size = n_nb, prob = p_nb, log = T)
+    if (x0_var <= x0_mean) {
+      stop("X0 variance must be larger than X0 mean")
+    }
+    size_nb <- x0_mean * x0_mean / (x0_var - x0_mean)
+    x0_prior_old <- dnbinom(x = x0_old, size = size_nb, mu = x0_mean, log = T)
   } else {
     stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
   }
@@ -105,14 +107,14 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       w <- rnorm(n = 2, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
-      x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
+      x0_new <- abs(x0_old + max(1, round(move[2], 0)) - 1) + 1
       p_obs_new <- 0
     } else {
       w <- rnorm(n = 3, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
       p_obs_new <- abs(p_obs_old + move[2])
-      x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
+      x0_new <- abs(x0_old + max(1, round(move[3], 0)) - 1) + 1
       while (p_obs_new < 0 | p_obs_new > 1) {
         if (p_obs_new > 1) {
           p_obs_new <- 1 - p_obs_new
@@ -138,9 +140,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
         x0_prior_new <- 0
       }
     } else if (x0_prior == "nbinom") {
-      p_nb <- x0_mean / x0_var
-      n_nb <- x0_mean * p_nb / (1-p_nb)
-      x0_prior_new <- dnbinom(x = x0_new, size = n_nb, prob = p_nb, log = T)
+      x0_prior_new <- dnbinom(x = x0_new, size = size_nb, mu = x0_mean, log = T)
     } else {
       stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
     }
