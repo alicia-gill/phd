@@ -3,6 +3,8 @@
 #' Simulates a birth-death epidemic with varying birth rate and constant death rates and 1 infected on day 0.
 #'
 #' @param birth_rate_fn function of the birth rate over time of the epidemic.
+#' @param min_r minimum reproduction number
+#' @param max_r maximum reproduction number
 #' @param death_rate death rate of the epidemic.
 #' @param stop_time number of days to run the epidemic simulation for.
 #'
@@ -11,7 +13,7 @@
 #'
 #' @examples
 #' epidemic_bt(birth_rate_fn = linear, death_rate = 0.1, stop_time = 50)
-epidemic_bt <- function(birth_rate_fn, death_rate, stop_time) {
+epidemic_bt <- function(birth_rate_fn, min_r = 1, max_r = 5, death_rate, stop_time) {
   #index labels everyone by order of entry
   #parent is the number of parent
   #status is infection status: I is infected, R is removed
@@ -25,7 +27,7 @@ epidemic_bt <- function(birth_rate_fn, death_rate, stop_time) {
 
   inf <- c(1) #vector of infected people
 
-  bt <- birth_rate_fn(t = current_time, stop_time = stop_time)
+  bt <- birth_rate_fn(t = current_time, stop_time = stop_time, a = min_r*death_rate, b = max_r*death_rate)
 
   #run loop while some people are still infected
   while (n_inf > 0) {
@@ -47,7 +49,7 @@ epidemic_bt <- function(birth_rate_fn, death_rate, stop_time) {
       i <- sample(inf, size = 1)
     }
 
-    bt <- birth_rate_fn(t = current_time, stop_time = stop_time)
+    bt <- birth_rate_fn(t = current_time, stop_time = stop_time, a = min_r*death_rate, b = max_r*death_rate)
     a <- bt / (bt + death_rate)
     u <- runif(1)
     if (u < a) {
