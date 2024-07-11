@@ -4,10 +4,14 @@
 \alias{epidemic_bt}
 \title{Simulate epidemics with birth rate varying over time.}
 \usage{
-epidemic_bt(birth_rate_fn, death_rate, stop_time)
+epidemic_bt(birth_rate_fn, min_r = 1, max_r = 5, death_rate, stop_time)
 }
 \arguments{
 \item{birth_rate_fn}{function of the birth rate over time of the epidemic.}
+
+\item{min_r}{minimum reproduction number}
+
+\item{max_r}{maximum reproduction number}
 
 \item{death_rate}{death rate of the epidemic.}
 
