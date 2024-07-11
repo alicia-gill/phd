@@ -16,6 +16,17 @@ smc_x0(
   day = 0,
   genetic_data = NULL,
   noisy_prevalence,
+  sigma_mean = 0.1,
+  pobs_prior = "uniform",
+  pobs_min = 0,
+  pobs_max = 1,
+  pobs_alpha = 1,
+  pobs_beta = 1,
+  x0_prior = "uniform",
+  x0_min = 1,
+  x0_max = Inf,
+  x0_mean = 10,
+  x0_var = 100,
   n_particles = NULL,
   ess_threshold = n_particles/2,
   max_n_particles = 10000,
@@ -44,7 +55,31 @@ smc_x0(
 
 \item{day}{number of days in the past the most recent leaf was sampled.}
 
+\item{genetic_data}{data frame of day, number of lineages and number of coalescences.}
+
 \item{noisy_prevalence}{data frame of observed prevalence per day.}
+
+\item{sigma_mean}{exponential prior mean of sigma.}
+
+\item{pobs_prior}{"uniform" or "beta"; prior distribution on reporting probability.}
+
+\item{pobs_min}{minimum for uniform reporting probability prior.}
+
+\item{pobs_max}{maximum for uniform reporting probability prior.}
+
+\item{pobs_alpha}{shape1 for beta reporting probability prior.}
+
+\item{pobs_beta}{shape2 for beta reporting probability prior.}
+
+\item{x0_prior}{"uniform" or "nbinom"; prior distribution on day 0 prevalence.}
+
+\item{x0_min}{minimum for uniform day 0 prevalence prior.}
+
+\item{x0_max}{maximum for uniform day 0 prevalence prior.}
+
+\item{x0_mean}{mean for negative binomial day 0 prevalence prior.}
+
+\item{x0_var}{variance for negative binomial day 0 prevalence prior.}
 
 \item{n_particles}{number of particles used in the importance sampling.}
 
