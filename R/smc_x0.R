@@ -77,8 +77,8 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
 
   #setup for adaptation
   s <- 0
-  # zeta <- Inf #can be any constant >= 1
-  # inv_zeta <- 1/zeta
+  zeta <- Inf #can be any constant >= 1
+  inv_zeta <- 1/zeta
 
   scale[1] <- s
 
@@ -257,12 +257,15 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
     }
     mu_new <- ((1 - eta) * mu_old) + (eta * Xn)
     Sigma_new <- ((1 - eta) * Sigma_old) + (eta * (Xn - mu_old) %*% t(Xn - mu_old))
-    # evalues <- eigen(Sigma_new, symmetric = T)$values
-    # min_evalue <- min(evalues)
-    # max_evalue <- max(evalues)
+    # if (matrixcalc::is.positive.definite(Sigma_new)==0) {
+    #   browser()
+    # }
+    evalues <- eigen(Sigma_new, symmetric = T)$values
+    min_evalue <- min(evalues)
+    max_evalue <- max(evalues)
     # min_evalue <- min(evalues)*exp(s)
     # max_evalue <- max(evalues)*exp(s)
-    # if (norm(mu_new, type="2") <= zeta & max_evalue <= zeta & min_evalue >= inv_zeta) {
+    if (norm(mu_new, type="2") <= zeta & max_evalue <= zeta & min_evalue >= inv_zeta) {
       mu_old <- mu_new
       Sigma_old <- Sigma_new
       # sqrtSigma_old <- expm::sqrtm(Sigma_old)
@@ -275,7 +278,7 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
       } else {
         sqrtSigma_old <- expm::sqrtm(Sigma_old)
       }
-    # }
+    }
     mu[i+1,] <- mu_old
     Sigma[i+1,,] <- Sigma_old
 
