@@ -89,7 +89,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
   }
   prior_old <- sigma_prior_old + pobs_prior_old + x0_prior_old
-  f_hat_old <- sir_mix(n_particles = n_particles, sigma = sigma_old, x0 = x0_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)$int_llik
+  f_hat_old <- sir_mix(n_particles = n_particles, sigma = sigma_old, x0 = x0_old, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_old, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
 
   #need to find a good estimate of the posterior mean for sigma and p_obs
   #first 500 for burn-in
@@ -107,14 +107,16 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       w <- rnorm(n = 2, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
-      x0_new <- abs(x0_old + max(1, round(move[2], 0)) - 1) + 1
+      # x0_new <- abs(x0_old + max(1, round(move[2], 0)) - 1) + 1
+      x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
       p_obs_new <- 0
     } else {
       w <- rnorm(n = 3, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
       p_obs_new <- abs(p_obs_old + move[2])
-      x0_new <- abs(x0_old + max(1, round(move[3], 0)) - 1) + 1
+      # x0_new <- abs(x0_old + max(1, round(move[3], 0)) - 1) + 1
+      x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
       while (p_obs_new < 0 | p_obs_new > 1) {
         if (p_obs_new > 1) {
           p_obs_new <- 1 - p_obs_new
@@ -145,7 +147,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
     }
     prior_new <- sigma_prior_new + pobs_prior_new + x0_prior_new
-    f_hat_new <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)$int_llik
+    f_hat_new <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)
@@ -237,7 +239,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
     }
     prior_new <- sigma_prior_new + pobs_prior_new + x0_prior_new
-    f_hat_new <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = backward_sim)$int_llik
+    f_hat_new <- sir_mix(n_particles = n_particles, sigma = sigma_new, x0 = x0_new, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_new, genetic_data = genetic_data, ess_threshold = ess_threshold, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
     logr <- prior_new + f_hat_new - prior_old - f_hat_old
     loga <- min(0,logr)
     a <- exp(loga)

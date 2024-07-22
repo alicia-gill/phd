@@ -160,14 +160,16 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
       w <- rnorm(n = 2, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
-      x0_new <- abs(x0_old + max(1, round(move[2], 0)) - 1) + 1
+      # x0_new <- abs(x0_old + max(1, round(move[2], 0)) - 1) + 1
+      x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
       p_obs_new <- 0
     } else {
       w <- rnorm(n = 3, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
       p_obs_new <- abs(p_obs_old + move[2])
-      x0_new <- abs(x0_old + max(1, round(move[3], 0)) - 1) + 1
+      # x0_new <- abs(x0_old + max(1, round(move[3], 0)) - 1) + 1
+      x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
       while (p_obs_new < 0 | p_obs_new > 1) {
         if (p_obs_new > 1) {
           p_obs_new <- 1 - p_obs_new
