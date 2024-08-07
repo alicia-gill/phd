@@ -36,8 +36,8 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
 
   #setup for adaptation
   s <- 0
-  # zeta <- Inf #can be any constant >= 1
-  # inv_zeta <- 1/zeta
+  zeta <- Inf #can be any constant >= 1
+  inv_zeta <- 1/zeta
 
   sum_noisy <- sum(noisy_prevalence[-1,2])
 
@@ -95,7 +95,8 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
   #first 500 for burn-in
   #second 500 to estimate means
   for (i in 1:500) {
-    if (print == T) {
+#    print(i)
+    if (print) {
       j <- i/10
       if (j %% 1 == 0) {
         print(paste0(j,"%"))
@@ -107,16 +108,22 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       w <- rnorm(n = 2, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
-      # x0_new <- abs(x0_old + max(1, round(move[2], 0)) - 1) + 1
-      x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
+      x0_move <- round(move[2],0)
+      x0_sign <- sign(x0_move)
+      x0_move <- x0_sign*max(1, abs(x0_move))
+      x0_new <- abs(x0_old + x0_move - 1) + 1
+      # x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
       p_obs_new <- 0
     } else {
       w <- rnorm(n = 3, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
       p_obs_new <- abs(p_obs_old + move[2])
-      # x0_new <- abs(x0_old + max(1, round(move[3], 0)) - 1) + 1
-      x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
+      x0_move <- round(move[3],0)
+      x0_sign <- sign(x0_move)
+      x0_move <- x0_sign*max(1, abs(x0_move))
+      x0_new <- abs(x0_old + x0_move - 1) + 1
+      # x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
       while (p_obs_new < 0 | p_obs_new > 1) {
         if (p_obs_new > 1) {
           p_obs_new <- 1 - p_obs_new
@@ -170,16 +177,22 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     }
     mu_new <- ((1 - eta) * mu_old) + (eta * Xn)
     Sigma_new <- ((1 - eta) * Sigma_old) + (eta * (Xn - mu_old) %*% t(Xn - mu_old))
-    mu_old <- mu_new
-    Sigma_old <- Sigma_new
-    if (sum_noisy == 0) {
-      trace <- Sigma_old[1,1] + Sigma_old[2,2]
-      det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
-      sqrtdet <- sqrt(det)
-      tt <- sqrt(trace + 2*sqrtdet)
-      sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
-    } else {
-      sqrtSigma_old <- expm::sqrtm(Sigma_old)
+    evalues <- eigen(Sigma_new, symmetric = T)$values
+    min_evalue <- min(evalues)
+    max_evalue <- max(evalues)
+    if (norm(mu_new, type="2") <= zeta & max_evalue <= zeta & min_evalue >= inv_zeta) {
+      mu_old <- mu_new
+      Sigma_old <- Sigma_new
+      # sqrtSigma_old <- expm::sqrtm(Sigma_old)
+      if (sum_noisy == 0) {
+        trace <- Sigma_old[1,1] + Sigma_old[2,2]
+        det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
+        sqrtdet <- sqrt(det)
+        tt <- sqrt(trace + 2*sqrtdet)
+        sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
+      } else {
+        sqrtSigma_old <- expm::sqrtm(Sigma_old)
+      }
     }
   }
 
@@ -199,14 +212,22 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       w <- rnorm(n = 2, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
-      x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
+      x0_move <- round(move[2],0)
+      x0_sign <- sign(x0_move)
+      x0_move <- x0_sign*max(1, abs(x0_move))
+      x0_new <- abs(x0_old + x0_move - 1) + 1
+      # x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
       p_obs_new <- 0
     } else {
       w <- rnorm(n = 3, mean = 0, sd = 1)
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
       p_obs_new <- abs(p_obs_old + move[2])
-      x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
+      x0_move <- round(move[3],0)
+      x0_sign <- sign(x0_move)
+      x0_move <- x0_sign*max(1, abs(x0_move))
+      x0_new <- abs(x0_old + x0_move - 1) + 1
+      # x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
       while (p_obs_new < 0 | p_obs_new > 1) {
         if (p_obs_new > 1) {
           p_obs_new <- 1 - p_obs_new
@@ -266,16 +287,22 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     }
     mu_new <- ((1 - eta) * mu_old) + (eta * Xn)
     Sigma_new <- ((1 - eta) * Sigma_old) + (eta * (Xn - mu_old) %*% t(Xn - mu_old))
-    mu_old <- mu_new
-    Sigma_old <- Sigma_new
-    if (sum_noisy == 0) {
-      trace <- Sigma_old[1,1] + Sigma_old[2,2]
-      det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
-      sqrtdet <- sqrt(det)
-      tt <- sqrt(trace + 2*sqrtdet)
-      sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
-    } else {
-      sqrtSigma_old <- expm::sqrtm(Sigma_old)
+    evalues <- eigen(Sigma_new, symmetric = T)$values
+    min_evalue <- min(evalues)
+    max_evalue <- max(evalues)
+    if (norm(mu_new, type="2") <= zeta & max_evalue <= zeta & min_evalue >= inv_zeta) {
+      mu_old <- mu_new
+      Sigma_old <- Sigma_new
+      # sqrtSigma_old <- expm::sqrtm(Sigma_old)
+      if (sum_noisy == 0) {
+        trace <- Sigma_old[1,1] + Sigma_old[2,2]
+        det <- Sigma_old[1,1]*Sigma_old[2,2] - Sigma_old[1,2]*Sigma_old[2,1]
+        sqrtdet <- sqrt(det)
+        tt <- sqrt(trace + 2*sqrtdet)
+        sqrtSigma_old <- (Sigma_old + sqrtdet*diag(1,nrow=2,ncol=2))/tt
+      } else {
+        sqrtSigma_old <- expm::sqrtm(Sigma_old)
+      }
     }
   }
 
