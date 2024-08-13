@@ -161,7 +161,7 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
       move <- exp(s) * sqrtSigma_old %*% w
       sigma_new <- abs(sigma_old + move[1])
       x0_move <- round(move[2],0)
-      x0_sign <- sign(x0_move)
+      x0_sign <- sign(move[2])
       x0_move <- x0_sign*max(1, abs(x0_move))
       x0_new <- abs(x0_old + x0_move - 1) + 1
       # x0_new <- abs(x0_old + round(move[2], 0) - 1) + 1
@@ -172,7 +172,7 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
       sigma_new <- abs(sigma_old + move[1])
       p_obs_new <- abs(p_obs_old + move[2])
       x0_move <- round(move[3],0)
-      x0_sign <- sign(x0_move)
+      x0_sign <- sign(move[3])
       x0_move <- x0_sign*max(1, abs(x0_move))
       x0_new <- abs(x0_old + x0_move - 1) + 1
       # x0_new <- abs(x0_old + round(move[3], 0) - 1) + 1
