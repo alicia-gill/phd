@@ -65,7 +65,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
   #prior on sigma is exponential
   #prior on x0-1 is uniform(1,Inf)
   #prior on p_obs is uniform(0,1) or beta(1,3)
-  sigma_prior_old <- dexp(x = sigma_old, rate = sigma_mean, log = T)
+  sigma_prior_old <- dexp(x = sigma_old, rate = 1/sigma_mean, log = T)
   if (pobs_prior == "uniform") {
     pobs_prior_old <- dunif(x = p_obs_old, min = pobs_min, max = pobs_max, log = T)
   } else if (pobs_prior == "beta") {
@@ -134,7 +134,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
       }
     }
 
-    sigma_prior_new <- dexp(x = sigma_new, rate = sigma_mean, log = T)
+    sigma_prior_new <- dexp(x = sigma_new, rate = 1/sigma_mean, log = T)
     if (pobs_prior == "uniform") {
       pobs_prior_new <- dunif(x = p_obs_new, min = pobs_min, max = pobs_max, log = T)
     } else if (pobs_prior == "beta") {
