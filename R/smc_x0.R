@@ -44,7 +44,7 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
   if (is.null(n_particles)) {
     n_particles <- rep(NA, 3)
     for (i in 1:3) {
-      n_particles[i] <- find_nopt(sigma0 = sigma0, proportion_obs0 = proportion_obs0, death_rate = death_rate, ptree = ptree, day = day, noisy_prevalence = noisy_prevalence, sigma_mean = sigma_mean, pobs_prior = pobs_prior, pobs_min = pobs_min, pobs_max = pobs_max, pobs_alpha = pobs_alpha, pobs_beta = pobs_beta, x0_prior = x0_prior, x0_min = x0_min, x0_max = x0_max, x0_mean = x0_mean, x0_var = x0_var, resampling_scheme = resampling_scheme)
+      n_particles[i] <- find_nopt(sigma0 = sigma0, proportion_obs0 = proportion_obs0, x0 = x0, death_rate = death_rate, ptree = ptree, day = day, noisy_prevalence = noisy_prevalence, sigma_mean = sigma_mean, pobs_prior = pobs_prior, pobs_min = pobs_min, pobs_max = pobs_max, pobs_alpha = pobs_alpha, pobs_beta = pobs_beta, x0_prior = x0_prior, x0_min = x0_min, x0_max = x0_max, x0_mean = x0_mean, x0_var = x0_var, resampling_scheme = resampling_scheme, print = print)
     }
     #set 1000 <= n_particles <= max_n_particles
     n_particles <- min(max(n_particles), max_n_particles)
