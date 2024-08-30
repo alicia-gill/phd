@@ -69,7 +69,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
   if (pobs_prior == "uniform") {
     pobs_prior_old <- dunif(x = p_obs_old, min = pobs_min, max = pobs_max, log = T)
   } else if (pobs_prior == "beta") {
-    pobs_prior_old <- dbeta(x = p_obd_ols, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
+    pobs_prior_old <- dbeta(x = p_obs_old, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
   } else {
     stop("Reporting probability prior should be 'uniform' or 'beta'")
   }
@@ -95,7 +95,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
   #first 500 for burn-in
   #second 500 to estimate means
   for (i in 1:500) {
-#    print(i)
+    # print(i)
     if (print) {
       j <- i/10
       if (j %% 1 == 0) {
@@ -138,7 +138,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     if (pobs_prior == "uniform") {
       pobs_prior_new <- dunif(x = p_obs_new, min = pobs_min, max = pobs_max, log = T)
     } else if (pobs_prior == "beta") {
-      pobs_prior_new <- dbeta(x = p_obd_ols, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
+      pobs_prior_new <- dbeta(x = p_obs_new, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
     } else {
       stop("Reporting probability prior should be 'uniform' or 'beta'")
     }
@@ -200,6 +200,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
   p_obs_mean <- 0
   x0_mean <- 0
   for (i in 501:1000) {
+    # print(i)
     if (print == T) {
       j <- i/10
       if (j %% 1 == 0) {
@@ -242,7 +243,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     if (pobs_prior == "uniform") {
       pobs_prior_new <- dunif(x = p_obs_new, min = pobs_min, max = pobs_max, log = T)
     } else if (pobs_prior == "beta") {
-      pobs_prior_new <- dbeta(x = p_obd_ols, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
+      pobs_prior_new <- dbeta(x = p_obs_new, shape1 = pobs_alpha, shape2 = pobs_beta, log = T)
     } else {
       stop("Reporting probability prior should be 'uniform' or 'beta'")
     }
@@ -313,12 +314,15 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     if (print == T) {
       print(r)
     }
-    nopt_llik[r] <- sir_mix(n_particles = Ns, x0 = min(1, round(x0_mean,0)), sigma = sig_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns*ess_threshold_prop, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
+    nopt_llik[r] <- sir_mix(n_particles = Ns, x0 = max(1, round(x0_mean,0)), sigma = sig_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns*ess_threshold_prop, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
   }
-  var <- sum(nopt_llik^2)/R - mean(nopt_llik)^2
+  #remove -Infs
+  nopt_llik2 <- nopt_llik[nopt_llik != -Inf]
+  R2 <- length(nopt_llik2)
+  var <- sum(nopt_llik2^2)/R2 - mean(nopt_llik2)^2
   Nopt <- ceiling(Ns * (var) / (0.92^2))
 
-  n_particles <- max(1, Nopt)
+  n_particles <- ifelse(is.nan(Nopt), 0, max(1, Nopt))
 
   return(n_particles)
 }
