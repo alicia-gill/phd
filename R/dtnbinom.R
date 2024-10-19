@@ -14,15 +14,19 @@
 #' @examples
 #' dtnbinom(x = 1, size = 10, mu = 2, a = 1, b = 100)
 dtnbinom <- function(x, size, mu, a, b, log = TRUE) {
+  if (x < a | x > b) {
+    if (log) {
+      return(-Inf)
+    } else {
+      return(0)
+    }
+  }
+
   log_num <- dnbinom(x = x, size = size, mu = mu, log = TRUE)
   denominator <- 1 - pnbinom(a-1, size = size, mu = mu) - pnbinom(b, size = size, mu = mu, lower.tail = FALSE)
   log_denom <- log(denominator)
 
-  if (x < a | x > b) {
-    output <- -Inf
-  } else {
-    output <- log_num - log_denom
-  }
+  output <- log_num - log_denom
 
   if (log) {
     return(output)
