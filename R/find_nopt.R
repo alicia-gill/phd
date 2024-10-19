@@ -198,7 +198,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
 
   sig_mean <- 0
   p_obs_mean <- 0
-  x0_mean <- 0
+  x_mean <- 0
   for (i in 501:1000) {
     # print(i)
     if (print == T) {
@@ -279,7 +279,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
 
     sig_mean <- ((i-501)*sig_mean + sigma_old)/(i-500)
     p_obs_mean <- ((i-501)*p_obs_mean + p_obs_old)/(i-500)
-    x0_mean <- ((i-501)*x0_mean + x0_old)/(i-500)
+    x_mean <- ((i-501)*x_mean + x0_old)/(i-500)
 
     if (sum_noisy == 0) {
       Xn <- c(sigma_old, x0_old)
@@ -314,7 +314,7 @@ find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 
     if (print == T) {
       print(r)
     }
-    nopt_llik[r] <- sir_mix(n_particles = Ns, x0 = max(1, round(x0_mean,0)), sigma = sig_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns*ess_threshold_prop, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
+    nopt_llik[r] <- sir_mix(n_particles = Ns, x0 = max(1, round(x_mean,0)), sigma = sig_mean, death_rate = death_rate, noisy_prevalence = noisy_prevalence, proportion_obs = p_obs_mean, genetic_data = genetic_data, ess_threshold = Ns*ess_threshold_prop, resampling_scheme = resampling_scheme, backward_sim = F)$int_llik
   }
   #remove -Infs
   nopt_llik2 <- nopt_llik[nopt_llik != -Inf]
