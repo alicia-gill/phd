@@ -137,7 +137,7 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
       stop("X0 variance must be larger than X0 mean")
     }
     size_nb <- x0_mean * x0_mean / (x0_var - x0_mean)
-    x0_prior_old <- dnbinom(x = x0_old, size = size_nb, mu = x0_mean, log = T)
+    x0_prior_old <- dtnbinom(x = x0_old, size = size_nb, mu = x0_mean, a = x0_min, b = x0_max, log = T)
   } else {
     stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
   }
@@ -205,7 +205,7 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
         x0_prior_new <- 0
       }
     } else if (x0_prior == "nbinom") {
-      x0_prior_new <- dnbinom(x = x0_new, size = size_nb, mu = x0_mean, log = T)
+      x0_prior_new <- dtnbinom(x = x0_new, size = size_nb, mu = x0_mean, a = x0_min, b = x0_max, log = T)
     } else {
       stop("Day 0 prevalence prior should be 'uniform' or 'nbinom'")
     }
