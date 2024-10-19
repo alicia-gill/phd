@@ -30,6 +30,7 @@ rtskellam_smc <- function(n, old_x, birth_rate, death_rate, trunc = -old_x) {
   mu1 <- old_x * birth_rate
   mu2 <- old_x * death_rate
   mu <- c(mu1, mu2)
+  mu[mu > 1e308] <- 1e308
 
   output <- rep(NA, n)
 
@@ -39,8 +40,8 @@ rtskellam_smc <- function(n, old_x, birth_rate, death_rate, trunc = -old_x) {
   while(m > 0 & count <= 100) {
     bd <- rpois(2*m, mu[c(index, n+index)])
     x <- bd[1:m] - bd[(m+1):(2*m)]
-    success <- index[x > trunc[index]]
-    output[success] <- x[x > trunc[index]]
+    success <- na.omit(index[x > trunc[index]])
+    output[success] <- na.omit(x[x > trunc[index]])
 
     index <- (1:n)[is.na(output)]
     m <- length(index)
