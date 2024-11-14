@@ -13,7 +13,7 @@ NULL
 
 #' @rdname epi_fns
 #' @export
-constant <- function(t, stop_time, a=0.3) {
+constant <- function(t, stop_time, a=0.3, b) {
   return(a)
 }
 
