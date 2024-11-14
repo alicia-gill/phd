@@ -56,7 +56,8 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
   }
 
   #prevalence goes on one day longer than epidemic
-  n <- nrow(noisy_prevalence)
+  trailing_zeros <- min(day, which.max(rev(noisy_prevalence[,2])>0)-1)
+  n <- nrow(noisy_prevalence) - trailing_zeros
   stop_time <- n - 1
 
   #if genetic_data is not specified, calculate it from the tree
