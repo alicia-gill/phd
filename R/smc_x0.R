@@ -59,11 +59,14 @@ smc_x0 <- function(iter, max_time = Inf, target_acceptance = 0.1, sigma0, propor
   trailing_zeros <- min(day, which.max(rev(noisy_prevalence[,2])>0)-1)
   n <- nrow(noisy_prevalence) - trailing_zeros
   stop_time <- n - 1
+  day <- day - trailing_zeros
 
   #if genetic_data is not specified, calculate it from the tree
   if (is.null(genetic_data)) {
     genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
   }
+  noisy_prevalence <- noisy_prevalence[1:n,]
+
 
   #initialise output
   b_matrix <- matrix(NA, nrow=iter, ncol=stop_time)

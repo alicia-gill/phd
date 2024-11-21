@@ -27,9 +27,13 @@
 #' @examples
 #' find_nopt(sigma0 = 0.1, proportion_obs0 = 0.5, death_rate = 0.1, ptree = sample_tree, day = 1, noisy_prevalence = noisy_prev, print = T)
 find_nopt <- function(sigma0, proportion_obs0, x0 = 1, death_rate, ptree, day = 0, noisy_prevalence, sigma_mean = 0.1, pobs_prior = "uniform", pobs_min = 0, pobs_max = 1, pobs_alpha = 1, pobs_beta = 1, x0_prior = "uniform", x0_min=1, x0_max=Inf, x0_mean=10, x0_var=100, ess_threshold_prop = 0.5, resampling_scheme = "systematic", print = F) {
-  n <- nrow(noisy_prevalence)
+
+  trailing_zeros <- min(day, which.max(rev(noisy_prevalence[,2])>0)-1)
+  n <- nrow(noisy_prevalence) - trailing_zeros
   stop_time <- n - 1
+  day <- day - trailing_zeros
   genetic_data <- genetic_data(ptree = ptree, stop_time = stop_time, day = day)
+  noisy_prevalence <- noisy_prevalence[1:n,]
 
   sigma_old <- sigma0
   x0_old <- x0
